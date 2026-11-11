@@ -1,3 +1,4 @@
+
 package br.com.fiap.binova.security;
 
 import br.com.fiap.binova.domain.Usuario;
@@ -16,39 +17,47 @@ import java.util.Date;
 
 @Service
 public class JwtService {
+
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
     private final SecretKey chave;
     private final long minutos;
 
-    // Valida a chave configurada ou cria uma chave temporaria para uso local.
-    public JwtService(@Value("${app.jwt.secret-base64:}") String segredoBase64,
-                      @Value("${app.jwt.minutos:120}") long minutos) {
+    // Configura a chave e o tempo de validade
+    public JwtService(
+            @Value("${app.jwt.secret-base64:}") String segredoBase64,
+            @Value("${app.jwt.minutos:120}") long minutos) {
 
         if (minutos < 1 || minutos > 1440) {
-            throw new IllegalStateException("Tempo do JWT deve ficar entre 1 e 1440 minutos");
+            throw new IllegalStateException("Validade do JWT deve ficar entre 1 e 1440 minutos");
         }
 
         if (segredoBase64 == null || segredoBase64.isBlank()) {
             byte[] chaveLocal = new byte[32];
             new SecureRandom().nextBytes(chaveLocal);
+
             this.chave = Keys.hmacShaKeyFor(chaveLocal);
-            log.warn("JWT_SECRET_BASE64 ausente: chave temporaria gerada (tokens expiram ao reiniciar)");
+            log.warn("Chave JWT temporaria criada para desenvolvimento");
         } else {
 
             try {
                 byte[] dados = Decoders.BASE64.decode(segredoBase64);
+
                 if (dados.length < 32) {
-                    throw new IllegalArgumentException("A chave deve conter pelo menos 32 bytes");
+                    throw new IllegalArgumentException("Chave deve conter pelo menos 32 bytes");
                 }
+
                 this.chave = Keys.hmacShaKeyFor(dados);
+
             } catch (RuntimeException erro) {
-                throw new IllegalStateException("JWT_SECRET_BASE64 deve conter Base64 de pelo menos 32 bytes", erro);
+                throw new IllegalStateException("Chave JWT invalida", erro);
             }
         }
+
         this.minutos = minutos;
     }
 
-    // Gera token assinado para o usuario autenticado
+    // Gera um token JWT para o usuário autenticado
     public String gerar(Usuario usuario) {
         Instant agora = Instant.now();
 
@@ -61,12 +70,17 @@ public class JwtService {
                 .compact();
     }
 
-    // Extrai o email somente de um token valido
+    // Valida o token e recupera o e-mail
     public String extrairEmail(String token) {
-        return Jwts.parser().verifyWith(chave).build().parseSignedClaims(token).getPayload().getSubject();
+        return Jwts.parser()
+                .verifyWith(chave)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 
-    // Converte a validade do token para segundos
+    // Retorna a validade do token em segundos
     public long validadeEmSegundos() {
         return minutos * 60;
     }
