@@ -19,18 +19,21 @@ public class LeituraSensorService {
     private final LeituraSensorRepository leituras;
     private final PontoColetaService pontos;
 
-    // Lista o historico de leituras do ponto, paginado.
+    // Lista o historico de leituras do ponto
     @Transactional(readOnly = true)
     public Page<Saidas.Leitura> listar(Long pontoId, Pageable pagina) {
         pontos.obter(pontoId);
         return leituras.findByPontoColetaId(pontoId, pagina).map(Saidas.Leitura::de);
     }
 
-    // Recebe a medicao IoT somente se o ponto estiver ativo.
+    // Recebe a medicao IoT somente se o ponto estiver ativo
     @Transactional
     public Saidas.Leitura registrar(Long pontoId, Entradas.Leitura dados) {
         PontoColeta ponto = pontos.obter(pontoId);
-        if (!ponto.isAtivo()) throw new OperacaoInvalidaException("Ponto desativado nao recebe leituras");
+
+        if (!ponto.isAtivo())
+            throw new OperacaoInvalidaException("Ponto desativado nao recebe leituras");
+
         LeituraSensor leitura = new LeituraSensor();
         leitura.setPontoColeta(ponto);
         leitura.setDistanciaCm(dados.distanciaCm());
@@ -38,12 +41,12 @@ public class LeituraSensorService {
         return Saidas.Leitura.de(leituras.saveAndFlush(leitura));
     }
 
-    // Consulta uma leitura pelo ID, respeitando o ponto informado na URL.
+    // Consulta uma leitura pelo ID
     @Transactional(readOnly = true)
     public Saidas.Leitura detalhar(Long pontoId, Long leituraId) {
         pontos.obter(pontoId);
-        LeituraSensor leitura = leituras.findById(leituraId)
-            .orElseThrow(() -> new RecursoNaoEncontradoException("Leitura nao encontrada"));
+        LeituraSensor leitura = leituras.findById(leituraId).orElseThrow(() -> new RecursoNaoEncontradoException("Leitura nao encontrada"));
+
         if (!leitura.getPontoColeta().getId().equals(pontoId))
             throw new RecursoNaoEncontradoException("Leitura nao pertence ao ponto informado");
         return Saidas.Leitura.de(leitura);
