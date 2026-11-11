@@ -1,25 +1,30 @@
+
 package br.com.fiap.binova.api;
 
-import br.com.fiap.binova.domain.StatusOcorrencia;
 import br.com.fiap.binova.domain.Papel;
+import br.com.fiap.binova.domain.StatusOcorrencia;
+import br.com.fiap.binova.domain.Usuario;
 import br.com.fiap.binova.dto.Entradas;
 import br.com.fiap.binova.dto.Saidas;
-import br.com.fiap.binova.service.OcorrenciaService;
 import br.com.fiap.binova.service.AutenticacaoService;
+import br.com.fiap.binova.service.OcorrenciaService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.net.URI;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -29,52 +34,72 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @Tag(name = "Ocorrências", description = "Relatos registrados pelos cidadãos")
 @SecurityRequirement(name = "bearerAuth")
 public class OcorrenciasController {
+
     private final OcorrenciaService ocorrencias;
     private final AutenticacaoService autenticacao;
 
-    // Lista ocorrencias conforme perfil e filtro opcional
+    // Lista as ocorrências conforme o usuário e o status
     @Operation(summary = "Lista relatos conforme o papel e o status")
     @GetMapping
     public Page<EntityModel<Saidas.Ocorrencia>> listar(Authentication auth,
-            @RequestParam(required = false) StatusOcorrencia status,
-            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pagina) {
-        return ocorrencias.listar(auth.getName(), status, pagina).map(item -> modelo(item, auth));
+                                                       @RequestParam(required = false) StatusOcorrencia status,
+                                                       @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pagina) {
+
+        Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
+
+        return ocorrencias.listar(auth.getName(), status, pagina)
+                .map(item -> modelo(item, usuario));
     }
 
-    // Consulta ocorrencia acessivel ao autor ou administrador
+    // Consulta uma ocorrência permitida ao usuário
     @Operation(summary = "Consulta o relato do autor ou administrador")
     @GetMapping("/{id}")
     public EntityModel<Saidas.Ocorrencia> detalhar(@PathVariable Long id, Authentication auth) {
-        return modelo(ocorrencias.detalhar(id, auth.getName()), auth);
+        Saidas.Ocorrencia ocorrencia = ocorrencias.detalhar(id, auth.getName());
+        Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
+
+        return modelo(ocorrencia, usuario);
     }
 
-    // Abre ocorrencia com autoria obtida do token, nunca do corpo
+    // Registra uma nova ocorrência com o usuário autenticado
     @Operation(summary = "Registra uma nova ocorrência")
     @PostMapping
-    public ResponseEntity<EntityModel<Saidas.Ocorrencia>> criar(@RequestBody @Valid Entradas.OcorrenciaNova dados,
-            Authentication auth) {
+    public ResponseEntity<EntityModel<Saidas.Ocorrencia>> criar(
+            @RequestBody @Valid Entradas.OcorrenciaNova dados, Authentication auth) {
+
         Saidas.Ocorrencia ocorrencia = ocorrencias.criar(dados, auth.getName());
-        return ResponseEntity.created(URI.create("/api/ocorrencias/" + ocorrencia.id())).body(modelo(ocorrencia, auth));
+        Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
+
+        return ResponseEntity.created(URI.create("/api/ocorrencias/" + ocorrencia.id()))
+                .body(modelo(ocorrencia, usuario));
     }
 
-    // Edita dados do relato permitido
+    // Atualiza o tipo e a descrição de uma ocorrência
     @Operation(summary = "Altera o tipo e a descrição do relato")
     @PutMapping("/{id}")
     public EntityModel<Saidas.Ocorrencia> atualizar(@PathVariable Long id,
-            @RequestBody @Valid Entradas.OcorrenciaEdicao dados, Authentication auth) {
-        return modelo(ocorrencias.atualizar(id, dados, auth.getName()), auth);
+                                                    @RequestBody @Valid Entradas.OcorrenciaEdicao dados, Authentication auth) {
+
+        Saidas.Ocorrencia ocorrencia = ocorrencias.atualizar(id, dados, auth.getName());
+        Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
+
+        return modelo(ocorrencia, usuario);
     }
 
-    // Altera o status do atendimento exclusivamente como administrador
+    // Altera o status de uma ocorrência como administrador
     @Operation(summary = "Atualiza o status (somente administrador)")
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public EntityModel<Saidas.Ocorrencia> mudarStatus(@PathVariable Long id,
-            @RequestBody @Valid Entradas.Status dados, Authentication auth) {
-        return modelo(ocorrencias.mudarStatus(id, dados.status()), auth);
+                                                      @RequestBody @Valid Entradas.Status dados, Authentication auth) {
+
+        Saidas.Ocorrencia ocorrencia = ocorrencias.mudarStatus(id, dados.status());
+        Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
+
+        return modelo(ocorrencia, usuario);
     }
 
-    // Exclui relato do dono ou do administrador quando a regra permitir
+    // Exclui uma ocorrência conforme as regras de permissão
     @Operation(summary = "Remove relato permitido pela regra de negócio")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id, Authentication auth) {
@@ -82,25 +107,30 @@ public class OcorrenciasController {
         return ResponseEntity.noContent().build();
     }
 
-    // Monta links apenas para ações autorizadas ao perfil atual
-    private EntityModel<Saidas.Ocorrencia> modelo(Saidas.Ocorrencia ocorrencia, Authentication auth) {
-        EntityModel<Saidas.Ocorrencia> resposta = EntityModel.of(ocorrencia,
-            linkTo(methodOn(OcorrenciasController.class).detalhar(ocorrencia.id(), null)).withSelfRel(),
-            linkTo(PontosColetaController.class).slash(ocorrencia.pontoColetaId()).withRel("ponto"));
+    // Adiciona links HATEOAS conforme as permissões do usuário
+    private EntityModel<Saidas.Ocorrencia> modelo(Saidas.Ocorrencia ocorrencia, Usuario usuario) {
+        Long id = ocorrencia.id();
 
-        var usuario = autenticacao.usuarioAutenticado(auth.getName());
+        EntityModel<Saidas.Ocorrencia> resposta = EntityModel.of(ocorrencia,
+                linkTo(methodOn(OcorrenciasController.class).detalhar(id, null)).withSelfRel(),
+                linkTo(PontosColetaController.class).slash(ocorrencia.pontoColetaId()).withRel("ponto"));
+
         boolean administrador = usuario.getPapel() == Papel.ADMIN;
         boolean autor = usuario.getId().equals(ocorrencia.usuarioId());
+
         if (administrador) {
-            resposta.add(linkTo(OcorrenciasController.class).slash(ocorrencia.id()).slash("status")
-                .withRel("alterar-status"));
+            resposta.add(linkTo(OcorrenciasController.class).slash(id).slash("status")
+                    .withRel("alterar-status"));
         }
+
         if ((administrador || autor) && ocorrencia.status() != StatusOcorrencia.RESOLVIDA) {
-            resposta.add(linkTo(OcorrenciasController.class).slash(ocorrencia.id()).withRel("editar"));
+            resposta.add(linkTo(OcorrenciasController.class).slash(id).withRel("editar"));
         }
+
         if (administrador || (autor && ocorrencia.status() == StatusOcorrencia.ABERTA)) {
-            resposta.add(linkTo(OcorrenciasController.class).slash(ocorrencia.id()).withRel("excluir"));
+            resposta.add(linkTo(OcorrenciasController.class).slash(id).withRel("excluir"));
         }
+
         return resposta;
     }
 }

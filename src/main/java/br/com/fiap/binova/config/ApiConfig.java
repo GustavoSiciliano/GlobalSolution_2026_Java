@@ -1,3 +1,4 @@
+
 package br.com.fiap.binova.config;
 
 import br.com.fiap.binova.domain.Papel;
@@ -16,38 +17,61 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Clock;
 
 @Configuration
-@OpenAPIDefinition(info = @Info(title = "Binova API", version = "1.0.0",
-    description = "API Java da Global Solution CitizenTech: pontos, leituras e ocorrencias"))
-@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
+@OpenAPIDefinition(info = @Info(
+        title = "Binova API",
+        version = "1.0.0",
+        description = "API Java do Binova: pontos de coleta, leituras e ocorrencias"
+))
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP,
+        scheme = "bearer", bearerFormat = "JWT")
 public class ApiConfig {
 
-    // Configura o relógio para as leituras
+    // Configura o relógio utilizado nas leituras
     @Bean
     public Clock clock() {
         return Clock.systemUTC();
     }
 
-    // Cria contas de demonstração na primeira execução
+    // Cria usuários de demonstração quando habilitado
     @Bean
-    public CommandLineRunner usuariosDeDemonstracao(UsuarioRepository usuarios,
-            PasswordEncoder codificador, @Value("${app.demo.enabled:true}") boolean demo) {
+    public CommandLineRunner usuariosDeDemonstracao(
+            UsuarioRepository usuarios,
+            PasswordEncoder codificador,
+            @Value("${app.demo.enabled:false}") boolean demo,
+            @Value("${app.demo.admin.password:}") String senhaAdmin,
+            @Value("${app.demo.cidadao.password:}") String senhaCidadao) {
+
         return args -> {
-            if (!demo) return;
-            adicionarUsuario(usuarios, codificador, "Administrador Binova", "admin@binova.local", "Admin@12345", Papel.ADMIN);
-            adicionarUsuario(usuarios, codificador, "Cidadao Binova", "cidadao@binova.local", "Cidadao@12345", Papel.CIDADAO);
+            if (!demo) {
+                return;
+            }
+
+            if (senhaAdmin.isBlank() || senhaCidadao.isBlank()) {
+                throw new IllegalStateException("Configure as senhas dos usuarios de demonstracao");
+            }
+
+            adicionarUsuario(usuarios, codificador,
+                    "Administrador", "admin@binova.local", senhaAdmin, Papel.ADMIN);
+
+            adicionarUsuario(usuarios, codificador,
+                    "Cidadao", "cidadao@binova.local", senhaCidadao, Papel.CIDADAO);
         };
     }
 
-    // Evita duplicar usuarios quando o H2 persistente e reiniciado
-    private void adicionarUsuario(UsuarioRepository usuarios, PasswordEncoder codificador, String nome, String email, String senha, Papel papel) {
-        if (usuarios.existsByEmailIgnoreCase(email))
-            return;
-        Usuario usuario = new Usuario();
+    // Cadastra o usuário caso ainda não exista
+    private void adicionarUsuario(UsuarioRepository usuarios, PasswordEncoder codificador,
+                                  String nome, String email, String senha, Papel papel) {
 
+        if (usuarios.existsByEmailIgnoreCase(email)) {
+            return;
+        }
+
+        Usuario usuario = new Usuario();
         usuario.setNome(nome);
         usuario.setEmail(email);
         usuario.setSenhaHash(codificador.encode(senha));
         usuario.setPapel(papel);
+
         usuarios.save(usuario);
     }
 }
