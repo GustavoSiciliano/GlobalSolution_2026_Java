@@ -8,10 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, Long>, JpaSpecificationExecutor<Ocorrencia> {
-    // Lista relatos de um cidadão.
+    // Lista relatos de um cidadão
     Page<Ocorrencia> findByUsuarioId(Long usuarioId, Pageable pageable);
-    // Filtra relatos do cidadão por status.
+
+    // Filtra relatos do cidadão por status
     Page<Ocorrencia> findByUsuarioIdAndStatus(Long usuarioId, StatusOcorrencia status, Pageable pageable);
-    // Filtra relatos por status.
+
+    // Filtra relatos por status
     Page<Ocorrencia> findByStatus(StatusOcorrencia status, Pageable pageable);
 }

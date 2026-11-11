@@ -9,10 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PontoColetaRepository extends JpaRepository<PontoColeta, Long>, JpaSpecificationExecutor<PontoColeta> {
-    // Query method derivado: pontos ativos.
     Page<PontoColeta> findByAtivoTrue(Pageable pageable);
 
-    // JPQL: busca textual pelo nome independentemente de maiusculas.
     @Query("select p from PontoColeta p where lower(p.nome) like lower(concat('%', :nome, '%'))")
     Page<PontoColeta> buscarPorNome(@Param("nome") String nome, Pageable pageable);
 }

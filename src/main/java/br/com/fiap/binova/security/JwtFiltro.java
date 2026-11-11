@@ -20,11 +20,12 @@ public class JwtFiltro extends OncePerRequestFilter {
     private final JwtService jwt;
     private final UserDetailsService usuarios;
 
-    // Autentica as requisicoes que apresentarem token valido.
+    // Autentica as requisicoes que apresentarem token valido
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String cabecalho = request.getHeader("Authorization");
+
         if (cabecalho != null && cabecalho.startsWith("Bearer ")
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
