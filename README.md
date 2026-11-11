@@ -67,8 +67,8 @@ As contas criadas serão:
 
 | Perfil | E-mail | Senha no exemplo |
 |---|---|---|
-| Administrador | `admin@binova.local` | `AdminLocal2026!` |
-| Cidadão | `cidadao@binova.local` | `CidadaoLocal2026!` |
+| Administrador | `admin@binova.local` | `AdminLocal2026` |
+| Cidadão | `cidadao@binova.local` | `CidadaoLocal2026` |
 
 Essas senhas são **apenas exemplos para testes locais** e não devem ser reutilizadas em ambientes reais. O sistema armazena as senhas utilizando **BCrypt** e não recria contas que já existam no banco. Portanto, alterar a variável de ambiente não troca a senha de um usuário já cadastrado.
 
