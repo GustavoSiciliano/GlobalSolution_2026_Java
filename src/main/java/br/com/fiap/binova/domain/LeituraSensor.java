@@ -27,7 +27,7 @@ public class LeituraSensor {
     @Column(name = "registrado_em", nullable = false, updatable = false)
     private OffsetDateTime registradoEm;
 
-    // Usa o horario do servidor para evitar leituras com data forjada.
+    // Usa o horario do servidor
     @PrePersist
     void aoRegistrar() {
         if (registradoEm == null) registradoEm = OffsetDateTime.now();

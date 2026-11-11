@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "usuario", indexes = @Index(name = "idx_usuario_email", columnList = "email", unique = true))
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class Usuario {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 120)
@@ -34,7 +38,7 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
     private List<Ocorrencia> ocorrencias = new ArrayList<>();
 
-    // Preenche a data de cadastro somente na primeira gravacao.
+    // Preenche a data de cadastro somente na primeira gravacao
     @PrePersist
     void aoCadastrar() {
         if (criadoEm == null) criadoEm = OffsetDateTime.now();

@@ -37,7 +37,7 @@ public class PontoColeta {
     @OneToMany(mappedBy = "pontoColeta", fetch = FetchType.LAZY)
     private List<Ocorrencia> ocorrencias = new ArrayList<>();
 
-    // Registra o instante inicial do ponto.
+    // Registra o instante inicial do ponto
     @PrePersist
     void aoCadastrar() {
         if (criadoEm == null) criadoEm = OffsetDateTime.now();

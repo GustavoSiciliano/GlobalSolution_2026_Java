@@ -41,7 +41,7 @@ public class Ocorrencia {
     @Column(name = "atualizado_em", nullable = false)
     private OffsetDateTime atualizadoEm;
 
-    // Insere datas obrigatorias ao abrir a ocorrencia.
+    // Insere datas obrigatorias ao abrir a ocorrencia
     @PrePersist
     void aoCriar() {
         criadoEm = OffsetDateTime.now();
