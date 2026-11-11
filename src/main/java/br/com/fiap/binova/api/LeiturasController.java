@@ -27,7 +27,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class LeiturasController {
     private final LeituraSensorService leituras;
 
-    // Consulta o historico de medidas, inclusive as antigas.
+    // Consulta o historico de medidas, inclusive as antigas
     @Operation(summary = "Lista leituras de um ponto")
     @GetMapping
     public Page<EntityModel<Saidas.Leitura>> listar(@PathVariable Long pontoId,
@@ -35,14 +35,14 @@ public class LeiturasController {
         return leituras.listar(pontoId, pagina).map(leitura -> modelo(pontoId, leitura));
     }
 
-    // Busca uma leitura especifica do ponto.
+    // Busca uma leitura especifica do ponto
     @Operation(summary = "Consulta uma leitura específica")
     @GetMapping("/{id}")
     public EntityModel<Saidas.Leitura> detalhar(@PathVariable Long pontoId, @PathVariable Long id) {
         return modelo(pontoId, leituras.detalhar(pontoId, id));
     }
 
-    // Recebe medicao de dispositivo com credencial de administrador.
+    // Recebe medicao de dispositivo com credencial de administrador
     @Operation(summary = "Registra uma leitura de sensor")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,7 +53,7 @@ public class LeiturasController {
             .body(modelo(pontoId, leitura));
     }
 
-    // Inclui links para a leitura e o ponto relacionado.
+    // Inclui links para a leitura e o ponto relacionado
     private EntityModel<Saidas.Leitura> modelo(Long pontoId, Saidas.Leitura leitura) {
         return EntityModel.of(leitura,
             linkTo(methodOn(LeiturasController.class).detalhar(pontoId, leitura.id())).withSelfRel(),

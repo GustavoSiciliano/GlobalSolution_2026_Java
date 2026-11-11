@@ -30,7 +30,7 @@ public class PontosColetaController {
     private final PontoColetaService pontos;
     private final SituacaoPontoService situacao;
 
-    // Pagina pontos e aplica filtros dinamicos (Specification).
+    // Pagina pontos e aplica filtros dinamicos
     @Operation(summary = "Lista pontos com filtros e paginação")
     @GetMapping
     public Page<EntityModel<Saidas.Ponto>> listar(@RequestParam(required = false) String termo,
@@ -39,7 +39,7 @@ public class PontosColetaController {
         return pontos.listar(termo, ativo, pagina).map(this::modelo);
     }
 
-    // Demonstra uma consulta JPQL por nome.
+    // Demonstra uma consulta
     @Operation(summary = "Pesquisa pontos pelo nome usando JPQL")
     @GetMapping("/busca-nome")
     public Page<EntityModel<Saidas.Ponto>> buscarPorNome(@RequestParam String nome,
@@ -47,14 +47,14 @@ public class PontosColetaController {
         return pontos.buscarPorNome(nome, pagina).map(this::modelo);
     }
 
-    // Retorna ponto com links HATEOAS para detalhes relacionados.
+    // Retorna ponto com links HATEOAS para detalhes relacionados
     @Operation(summary = "Consulta um ponto por ID")
     @GetMapping("/{id}")
     public EntityModel<Saidas.Ponto> detalhar(@PathVariable Long id) {
         return modelo(pontos.consultar(id));
     }
 
-    // Retorna estado calculado em tempo real, sem cache.
+    // Retorna estado calculado em tempo real
     @Operation(summary = "Mostra o nível da última leitura")
     @GetMapping("/{id}/situacao")
     public Saidas.Situacao situacao(@PathVariable Long id) {
@@ -71,7 +71,7 @@ public class PontosColetaController {
         return ResponseEntity.created(URI.create("/api/pontos-coleta/" + ponto.id())).body(modelo(ponto));
     }
 
-    // Atualiza dados cadastrais do ponto.
+    // Atualiza dados cadastrais do ponto
     @Operation(summary = "Edita um ponto de coleta")
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
@@ -80,7 +80,7 @@ public class PontosColetaController {
         return modelo(pontos.atualizar(id, dados));
     }
 
-    // Desativa sem apagar historico.
+    // Desativa sem apagar historico
     @Operation(summary = "Desativa sem apagar o histórico")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
@@ -90,7 +90,7 @@ public class PontosColetaController {
         return ResponseEntity.noContent().build();
     }
 
-    // Reativa um ponto removido logicamente.
+    // Reativa um ponto removido logicamente
     @Operation(summary = "Reativa um ponto de coleta")
     @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/reativar")

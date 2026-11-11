@@ -32,7 +32,7 @@ public class OcorrenciasController {
     private final OcorrenciaService ocorrencias;
     private final AutenticacaoService autenticacao;
 
-    // Lista ocorrencias conforme perfil e filtro opcional.
+    // Lista ocorrencias conforme perfil e filtro opcional
     @Operation(summary = "Lista relatos conforme o papel e o status")
     @GetMapping
     public Page<EntityModel<Saidas.Ocorrencia>> listar(Authentication auth,
@@ -41,14 +41,14 @@ public class OcorrenciasController {
         return ocorrencias.listar(auth.getName(), status, pagina).map(item -> modelo(item, auth));
     }
 
-    // Consulta ocorrencia acessivel ao autor ou administrador.
+    // Consulta ocorrencia acessivel ao autor ou administrador
     @Operation(summary = "Consulta o relato do autor ou administrador")
     @GetMapping("/{id}")
     public EntityModel<Saidas.Ocorrencia> detalhar(@PathVariable Long id, Authentication auth) {
         return modelo(ocorrencias.detalhar(id, auth.getName()), auth);
     }
 
-    // Abre ocorrencia com autoria obtida do token, nunca do corpo.
+    // Abre ocorrencia com autoria obtida do token, nunca do corpo
     @Operation(summary = "Registra uma nova ocorrência")
     @PostMapping
     public ResponseEntity<EntityModel<Saidas.Ocorrencia>> criar(@RequestBody @Valid Entradas.OcorrenciaNova dados,
@@ -57,7 +57,7 @@ public class OcorrenciasController {
         return ResponseEntity.created(URI.create("/api/ocorrencias/" + ocorrencia.id())).body(modelo(ocorrencia, auth));
     }
 
-    // Edita dados do relato permitido.
+    // Edita dados do relato permitido
     @Operation(summary = "Altera o tipo e a descrição do relato")
     @PutMapping("/{id}")
     public EntityModel<Saidas.Ocorrencia> atualizar(@PathVariable Long id,
@@ -65,7 +65,7 @@ public class OcorrenciasController {
         return modelo(ocorrencias.atualizar(id, dados, auth.getName()), auth);
     }
 
-    // Altera o status do atendimento exclusivamente como administrador.
+    // Altera o status do atendimento exclusivamente como administrador
     @Operation(summary = "Atualiza o status (somente administrador)")
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
@@ -74,7 +74,7 @@ public class OcorrenciasController {
         return modelo(ocorrencias.mudarStatus(id, dados.status()), auth);
     }
 
-    // Exclui relato do dono ou do administrador quando a regra permitir.
+    // Exclui relato do dono ou do administrador quando a regra permitir
     @Operation(summary = "Remove relato permitido pela regra de negócio")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id, Authentication auth) {
@@ -82,7 +82,7 @@ public class OcorrenciasController {
         return ResponseEntity.noContent().build();
     }
 
-    // Monta links apenas para ações autorizadas ao perfil atual.
+    // Monta links apenas para ações autorizadas ao perfil atual
     private EntityModel<Saidas.Ocorrencia> modelo(Saidas.Ocorrencia ocorrencia, Authentication auth) {
         EntityModel<Saidas.Ocorrencia> resposta = EntityModel.of(ocorrencia,
             linkTo(methodOn(OcorrenciasController.class).detalhar(ocorrencia.id(), null)).withSelfRel(),

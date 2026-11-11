@@ -19,7 +19,7 @@ import java.net.URI;
 public class AutenticacaoController {
     private final AutenticacaoService servico;
 
-    // Cria uma conta de cidadao com senha protegida.
+    // Cria uma conta de cidadao com senha protegida
     @Operation(summary = "Cadastra um novo cidadão")
     @PostMapping("/cadastro")
     public ResponseEntity<Saidas.Usuario> cadastro(@RequestBody @Valid Entradas.Cadastro dados) {
@@ -27,7 +27,7 @@ public class AutenticacaoController {
         return ResponseEntity.created(URI.create("/api/usuarios/me")).body(usuario);
     }
 
-    // Autentica e devolve o token Bearer.
+    // Autentica e devolve o token Bearer
     @Operation(summary = "Confere email e senha e devolve JWT")
     @PostMapping("/login")
     public Saidas.Token login(@RequestBody @Valid Entradas.Login dados) {

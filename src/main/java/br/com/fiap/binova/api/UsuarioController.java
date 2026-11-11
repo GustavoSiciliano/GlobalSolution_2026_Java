@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsuarioController {
     private final AutenticacaoService autenticacao;
 
-    // Exibe os dados publicos do proprio usuario autenticado.
+    // Exibe os dados publicos do proprio usuario autenticado
     @Operation(summary = "Retorna dados do usuário autenticado")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/me")
