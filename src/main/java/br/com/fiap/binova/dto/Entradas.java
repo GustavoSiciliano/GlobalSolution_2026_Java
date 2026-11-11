@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public final class Entradas {
-    // Evita criar instâncias desta classe de DTOs.
+
     private Entradas() {}
 
     public record Cadastro(
