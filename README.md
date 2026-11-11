@@ -1,16 +1,15 @@
-# Binova — Java Advanced | FIAP Global Solution 2026/2
+# Binova - Java Advanced | FIAP Global Solution 2026/2
 
 API REST do **Binova** (CitizenTech), desenvolvida em **Java 21 + Spring Boot 4.1.2** com **H2 em arquivo**.
 Permite consultar pontos de coleta, registrar leituras das lixeiras e acompanhar ocorrencias de descarte.
-Este repositorio e apenas a entrega de **Java Advanced**. Nao requer Docker, PostgreSQL, Oracle nem Azure.
 
 ## Integrantes
 
-- Gustavo de Jesus — RM 567926
-- Gustavo Siciliano — RM 568419
-- Samuel Keniti — RM 567614
-- Manuel Pedro — RM 567458
-- Vinicius Morrone — RM 566884
+- Gustavo de Jesus - RM 567926
+- Gustavo Siciliano - RM 568419
+- Samuel Keniti - RM 567614
+- Manuel Pedro - RM 567458
+- Vinicius Morrone - RM 566884
 
 ## Como executar
 
@@ -131,7 +130,7 @@ erDiagram
 
 As relacoes sao `@ManyToOne(fetch=LAZY)` do lado das leituras e ocorrencias e `@OneToMany(mappedBy=...)` nos pontos e usuarios. Nao foi aplicado cascade de exclusao para **preservar o historico**. A exclusao dos pontos e **logica** (`ativo=false`).
 
-## Justificativa tecnica (FIAP)
+## Justificativa tecnica
 
 - **Query method derivado:** `findByAtivoTrue` (usado em `GET /api/pontos-coleta?ativo=true`) e `findFirstByPontoColetaIdOrderByRegistradoEmDesc` representam consultas simples do domínio.
 - **JPQL:** `buscarPorNome` permite pesquisa textual pelo nome da lixeira, sem SQL especifico do H2.
@@ -150,17 +149,3 @@ No Windows:
 ```
 
 Os testes estão em `src/test/java` e cobrem token JWT, faixas de leitura, login, perfis, status 400/401/403/404, as rotas principais, filtros, cache e links HATEOAS. Execute `.\mvnw.cmd clean verify` no Windows para validar no seu computador. O banco de teste é H2 em memória e **não altera** o arquivo de desenvolvimento. O banco de testes e um H2 **em memoria**, separado do arquivo de desenvolvimento.
-
-## Verificação do projeto
-
-O código foi revisado, os arquivos Java passaram por análise sintática e o mapeamento das rotas foi conferido.
-A compilação Maven e os testes com H2 precisam ser executados em um computador com acesso ao Maven Central.
-Se algum teste falhar, registre a saída do terminal antes de fazer a entrega.
-
-## Entrega Java Advanced
-
-- GitHub **publico**, projeto na raiz e historico de commits reais mostrando a evolucao.
-- README com integrantes, diagrama, consultas, cache, usuarios de teste e instrucoes (este arquivo).
-- **Link do video pitch (ate 5 min):** adicionar quando publicado.
-- Entrega no Portal FIAP: **TXT contendo somente o link do repositorio Java**.
-- Apresentacao: mostrar o app Mobile consumindo a API, JWT, consultas, cache, links HATEOAS e Actuator.
