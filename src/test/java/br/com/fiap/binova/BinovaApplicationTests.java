@@ -1,3 +1,4 @@
+
 package br.com.fiap.binova;
 
 import org.junit.jupiter.api.Test;
@@ -8,9 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class BinovaApplicationTests {
 
-    // Confirma que a aplicação inicializa sem erros de configuração
+    // Verifica se o contexto da aplicação inicia corretamente
     @Test
     void contextLoads() {
     }
-
 }
