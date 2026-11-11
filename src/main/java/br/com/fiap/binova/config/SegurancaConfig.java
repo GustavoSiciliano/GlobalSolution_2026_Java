@@ -34,11 +34,13 @@ import java.util.List;
 public class SegurancaConfig {
     private final UsuarioRepository usuarios;
 
-    // Protege senhas com BCrypt.
+    // Protege senhas
     @Bean
-    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-    // Busca a conta e o papel no banco H2.
+    // Busca a conta e o papel no banco H2
     @Bean
     public UserDetailsService userDetailsService() {
         return email -> usuarios.findByEmailIgnoreCase(email)
@@ -49,7 +51,7 @@ public class SegurancaConfig {
             .orElseThrow(() -> new UsernameNotFoundException("Usuario nao encontrado"));
     }
 
-    // Configura o login com email e senha.
+    // Configura o login com email e senha
     @Bean
     public AuthenticationManager authenticationManager(UserDetailsService detalhes, PasswordEncoder codificador) {
         var provedor = new DaoAuthenticationProvider(detalhes);
@@ -57,7 +59,7 @@ public class SegurancaConfig {
         return new ProviderManager(provedor);
     }
 
-    // Define as rotas públicas e as que exigem JWT.
+    // Define as rotas públicas
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtFiltro filtro, CorsConfigurationSource cors) throws Exception {
         return http.csrf(csrf -> csrf.disable())
@@ -87,7 +89,7 @@ public class SegurancaConfig {
             .build();
     }
 
-    // Evita registrar o filtro JWT duas vezes.
+    // Evita registrar o filtro JWT duas vezes
     @Bean
     public FilterRegistrationBean<JwtFiltro> registrarSomenteNaSeguranca(JwtFiltro filtro) {
         var registro = new FilterRegistrationBean<>(filtro);

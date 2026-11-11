@@ -20,13 +20,14 @@ import java.time.Clock;
     description = "API Java da Global Solution CitizenTech: pontos, leituras e ocorrencias"))
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class ApiConfig {
-    // Configura o relógio para as leituras.
+
+    // Configura o relógio para as leituras
     @Bean
     public Clock clock() {
         return Clock.systemUTC();
     }
 
-    // Cria contas de demonstração na primeira execução.
+    // Cria contas de demonstração na primeira execução
     @Bean
     public CommandLineRunner usuariosDeDemonstracao(UsuarioRepository usuarios,
             PasswordEncoder codificador, @Value("${app.demo.enabled:true}") boolean demo) {
@@ -37,11 +38,12 @@ public class ApiConfig {
         };
     }
 
-    // Evita duplicar usuarios quando o H2 persistente e reiniciado.
-    private void adicionarUsuario(UsuarioRepository usuarios, PasswordEncoder codificador, String nome,
-                                 String email, String senha, Papel papel) {
-        if (usuarios.existsByEmailIgnoreCase(email)) return;
+    // Evita duplicar usuarios quando o H2 persistente e reiniciado
+    private void adicionarUsuario(UsuarioRepository usuarios, PasswordEncoder codificador, String nome, String email, String senha, Papel papel) {
+        if (usuarios.existsByEmailIgnoreCase(email))
+            return;
         Usuario usuario = new Usuario();
+
         usuario.setNome(nome);
         usuario.setEmail(email);
         usuario.setSenhaHash(codificador.encode(senha));
