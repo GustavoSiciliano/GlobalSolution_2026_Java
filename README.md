@@ -83,7 +83,7 @@ O Swagger permite executar as requisições diretamente pelo navegador. Para dem
    ```json
    {
      "email": "admin@binova.local",
-     "senha": "AdminLocal2026!"
+     "senha": "AdminLocal2026"
    }
    ```
 
