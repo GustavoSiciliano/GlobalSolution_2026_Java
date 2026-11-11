@@ -1,17 +1,23 @@
+
 package br.com.fiap.binova.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "leitura_sensor", indexes = @Index(name = "idx_leitura_ponto_data", columnList = "ponto_coleta_id,registrado_em"))
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class LeituraSensor {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -27,9 +33,11 @@ public class LeituraSensor {
     @Column(name = "registrado_em", nullable = false, updatable = false)
     private OffsetDateTime registradoEm;
 
-    // Usa o horario do servidor
+    // Registra a data e hora da leitura
     @PrePersist
     void aoRegistrar() {
-        if (registradoEm == null) registradoEm = OffsetDateTime.now();
+        if (registradoEm == null) {
+            registradoEm = OffsetDateTime.now();
+        }
     }
 }

@@ -1,19 +1,22 @@
+
 package br.com.fiap.binova.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "ocorrencia", indexes = {
-    @Index(name = "idx_ocorrencia_usuario", columnList = "usuario_id"),
-    @Index(name = "idx_ocorrencia_status", columnList = "status")
-})
-@Getter @Setter @NoArgsConstructor
+@Table(name = "ocorrencia")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Ocorrencia {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -41,14 +44,14 @@ public class Ocorrencia {
     @Column(name = "atualizado_em", nullable = false)
     private OffsetDateTime atualizadoEm;
 
-    // Insere datas obrigatorias ao abrir a ocorrencia
+    // Define as datas ao cadastrar a ocorrência
     @PrePersist
     void aoCriar() {
         criadoEm = OffsetDateTime.now();
         atualizadoEm = criadoEm;
     }
 
-    // Atualiza a data quando a ocorrencia mudar.
+    // Atualiza a data quando a ocorrência é alterada
     @PreUpdate
     void aoAlterar() {
         atualizadoEm = OffsetDateTime.now();

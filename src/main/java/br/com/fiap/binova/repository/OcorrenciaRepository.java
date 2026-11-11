@@ -1,3 +1,4 @@
+
 package br.com.fiap.binova.repository;
 
 import br.com.fiap.binova.domain.Ocorrencia;
@@ -5,15 +6,15 @@ import br.com.fiap.binova.domain.StatusOcorrencia;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, Long>, JpaSpecificationExecutor<Ocorrencia> {
-    // Lista relatos de um cidadão
+public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, Long> {
+
+    // Lista as ocorrências de um usuário
     Page<Ocorrencia> findByUsuarioId(Long usuarioId, Pageable pageable);
 
-    // Filtra relatos do cidadão por status
+    // Filtra as ocorrências de um usuário pelo status
     Page<Ocorrencia> findByUsuarioIdAndStatus(Long usuarioId, StatusOcorrencia status, Pageable pageable);
 
-    // Filtra relatos por status
+    // Lista as ocorrências de determinado status
     Page<Ocorrencia> findByStatus(StatusOcorrencia status, Pageable pageable);
 }

@@ -1,3 +1,4 @@
+
 package br.com.fiap.binova.domain;
 
 import jakarta.persistence.*;
@@ -10,11 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "usuario", indexes = @Index(name = "idx_usuario_email", columnList = "email", unique = true))
+@Table(name = "usuario")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Usuario {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,12 +37,14 @@ public class Usuario {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private OffsetDateTime criadoEm;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "usuario")
     private List<Ocorrencia> ocorrencias = new ArrayList<>();
 
-    // Preenche a data de cadastro somente na primeira gravacao
+    // Define a data do cadastro do usuário
     @PrePersist
     void aoCadastrar() {
-        if (criadoEm == null) criadoEm = OffsetDateTime.now();
+        if (criadoEm == null) {
+            criadoEm = OffsetDateTime.now();
+        }
     }
 }
