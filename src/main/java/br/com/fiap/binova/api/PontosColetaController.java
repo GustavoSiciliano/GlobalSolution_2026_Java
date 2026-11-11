@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/pontos-coleta")
@@ -34,7 +33,7 @@ public class PontosColetaController {
     private final PontoColetaService pontos;
     private final SituacaoPontoService situacao;
 
-    // Lista os pontos com filtros e paginação
+    // Lista os pontos com filtros e paginação.
     @Operation(summary = "Lista pontos com filtros e paginação")
     @GetMapping
     public Page<EntityModel<Saidas.Ponto>> listar(
@@ -45,7 +44,7 @@ public class PontosColetaController {
         return pontos.listar(termo, ativo, pagina).map(this::modelo);
     }
 
-    // Pesquisa pontos pelo nome
+    // Pesquisa pontos pelo nome.
     @Operation(summary = "Pesquisa pontos pelo nome")
     @GetMapping("/busca-nome")
     public Page<EntityModel<Saidas.Ponto>> buscarPorNome(
@@ -55,21 +54,21 @@ public class PontosColetaController {
         return pontos.buscarPorNome(nome, pagina).map(this::modelo);
     }
 
-    // Consulta um ponto de coleta pelo ID
+    // Consulta um ponto de coleta pelo ID.
     @Operation(summary = "Consulta um ponto por ID")
     @GetMapping("/{id}")
     public EntityModel<Saidas.Ponto> detalhar(@PathVariable Long id) {
         return modelo(pontos.consultar(id));
     }
 
-    // Consulta a situação atual do ponto
+    // Consulta a situação atual do ponto.
     @Operation(summary = "Mostra o nível da última leitura")
     @GetMapping("/{id}/situacao")
     public Saidas.Situacao situacao(@PathVariable Long id) {
         return situacao.consultar(id);
     }
 
-    // Cadastra um novo ponto de coleta
+    // Cadastra um novo ponto de coleta.
     @Operation(summary = "Cadastra um ponto de coleta")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping
@@ -81,7 +80,7 @@ public class PontosColetaController {
                 .body(modelo(ponto));
     }
 
-    // Atualiza os dados de um ponto de coleta
+    // Atualiza os dados de um ponto de coleta.
     @Operation(summary = "Edita um ponto de coleta")
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
@@ -90,7 +89,7 @@ public class PontosColetaController {
         return modelo(pontos.atualizar(id, dados));
     }
 
-    // Desativa o ponto sem apagar o histórico
+    // Desativa o ponto sem apagar o histórico.
     @Operation(summary = "Desativa sem apagar o histórico")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
@@ -100,7 +99,7 @@ public class PontosColetaController {
         return ResponseEntity.noContent().build();
     }
 
-    // Reativa um ponto de coleta
+    // Reativa um ponto de coleta.
     @Operation(summary = "Reativa um ponto de coleta")
     @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/reativar")
@@ -109,13 +108,13 @@ public class PontosColetaController {
         return modelo(pontos.reativar(id));
     }
 
-    // Adiciona os links HATEOAS conforme o perfil do usuário
+    // Adiciona os links HATEOAS conforme o perfil do usuário.
     private EntityModel<Saidas.Ponto> modelo(Saidas.Ponto ponto) {
         Long id = ponto.id();
 
         EntityModel<Saidas.Ponto> resposta = EntityModel.of(ponto,
-                linkTo(methodOn(PontosColetaController.class).detalhar(id)).withSelfRel(),
-                linkTo(methodOn(PontosColetaController.class).situacao(id)).withRel("situacao"),
+                linkTo(PontosColetaController.class).slash(id).withSelfRel(),
+                linkTo(PontosColetaController.class).slash(id).slash("situacao").withRel("situacao"),
                 linkTo(PontosColetaController.class).slash(id).slash("leituras").withRel("leituras"));
 
         Authentication usuario = SecurityContextHolder.getContext().getAuthentication();
