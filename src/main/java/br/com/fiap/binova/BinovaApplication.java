@@ -13,7 +13,7 @@ import org.springframework.cache.annotation.EnableCaching;
 @EnableCaching
 public class BinovaApplication {
 
-    // Cria a pasta do banco H2
+    // Cria a pasta do banco H2 e inicia a aplicação
     public static void main(String[] args) throws IOException {
         Files.createDirectories(Path.of("data"));
         SpringApplication.run(BinovaApplication.class, args);

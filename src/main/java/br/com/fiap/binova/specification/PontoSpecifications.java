@@ -1,25 +1,38 @@
+
 package br.com.fiap.binova.specification;
 
 import br.com.fiap.binova.domain.PontoColeta;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public final class PontoSpecifications {
 
-    // Evita criar instâncias da classe de filtros
-    private PontoSpecifications() {}
+    private PontoSpecifications() {
+    }
 
-    // Filtro dinamico por nome e status
+    // Filtra pontos de coleta por nome e situação.
     public static Specification<PontoColeta> filtros(String termo, Boolean ativo) {
         return (raiz, consulta, cb) -> {
 
-            var condicoes = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+            List<Predicate> condicoes = new ArrayList<>();
 
             if (termo != null && !termo.isBlank()) {
-                condicoes.add(cb.like(cb.lower(raiz.get("nome")), "%" + termo.trim().toLowerCase(java.util.Locale.ROOT) + "%"));
+                String nome = "%" + termo.trim().toLowerCase(Locale.ROOT) + "%";
+
+                condicoes.add(
+                        cb.like(cb.lower(raiz.get("nome")), nome)
+                );
             }
 
-            if (ativo != null) condicoes.add(cb.equal(raiz.get("ativo"), ativo));
-            return cb.and(condicoes.toArray(jakarta.persistence.criteria.Predicate[]::new));
+            if (ativo != null) {
+                condicoes.add(cb.equal(raiz.get("ativo"), ativo));
+            }
+
+            return cb.and(condicoes.toArray(new Predicate[0]));
         };
     }
 }

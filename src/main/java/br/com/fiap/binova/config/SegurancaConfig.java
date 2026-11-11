@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -69,7 +70,7 @@ public class SegurancaConfig {
             .authorizeHttpRequests(rotas -> rotas
                 .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
                     "/h2-console/**", "/actuator/health", "/actuator/info", "/error").permitAll()
-                // Somente os dados dos pontos são públicos; leituras pedem login.
+
                 .requestMatchers(HttpMethod.GET, "/api/pontos-coleta", "/api/pontos-coleta/busca-nome",
                     "/api/pontos-coleta/*", "/api/pontos-coleta/*/situacao").permitAll()
                 .requestMatchers("/actuator/metrics", "/actuator/metrics/**").hasRole("ADMIN")
@@ -80,6 +81,7 @@ public class SegurancaConfig {
                     res.setContentType("application/json;charset=UTF-8");
                     res.getWriter().write("{\"status\":401,\"mensagem\":\"Autenticacao necessaria\"}");
                 })
+
                 .accessDeniedHandler((req, res, e) -> {
                     res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     res.setContentType("application/json;charset=UTF-8");
