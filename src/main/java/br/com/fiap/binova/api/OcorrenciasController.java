@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,12 +39,15 @@ public class OcorrenciasController {
     private final OcorrenciaService ocorrencias;
     private final AutenticacaoService autenticacao;
 
-    // Lista as ocorrências conforme o usuário e o status
+    // Lista as ocorrências conforme o usuário e o status.
     @Operation(summary = "Lista relatos conforme o papel e o status")
     @GetMapping
-    public Page<EntityModel<Saidas.Ocorrencia>> listar(Authentication auth,
-                                                       @RequestParam(required = false) StatusOcorrencia status,
-                                                       @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pagina) {
+    public Page<EntityModel<Saidas.Ocorrencia>> listar(
+            Authentication auth,
+            @RequestParam(required = false) StatusOcorrencia status,
+            @ParameterObject
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pagina) {
 
         Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
 
@@ -51,21 +55,24 @@ public class OcorrenciasController {
                 .map(item -> modelo(item, usuario));
     }
 
-    // Consulta uma ocorrência permitida ao usuário
+    // Consulta uma ocorrência permitida ao usuário.
     @Operation(summary = "Consulta o relato do autor ou administrador")
     @GetMapping("/{id}")
-    public EntityModel<Saidas.Ocorrencia> detalhar(@PathVariable Long id, Authentication auth) {
+    public EntityModel<Saidas.Ocorrencia> detalhar(
+            @PathVariable Long id, Authentication auth) {
+
         Saidas.Ocorrencia ocorrencia = ocorrencias.detalhar(id, auth.getName());
         Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
 
         return modelo(ocorrencia, usuario);
     }
 
-    // Registra uma nova ocorrência com o usuário autenticado
+    // Registra uma nova ocorrência com o usuário autenticado.
     @Operation(summary = "Registra uma nova ocorrência")
     @PostMapping
     public ResponseEntity<EntityModel<Saidas.Ocorrencia>> criar(
-            @RequestBody @Valid Entradas.OcorrenciaNova dados, Authentication auth) {
+            @RequestBody @Valid Entradas.OcorrenciaNova dados,
+            Authentication auth) {
 
         Saidas.Ocorrencia ocorrencia = ocorrencias.criar(dados, auth.getName());
         Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
@@ -74,11 +81,13 @@ public class OcorrenciasController {
                 .body(modelo(ocorrencia, usuario));
     }
 
-    // Atualiza o tipo e a descrição de uma ocorrência
+    // Atualiza o tipo e a descrição de uma ocorrência.
     @Operation(summary = "Altera o tipo e a descrição do relato")
     @PutMapping("/{id}")
-    public EntityModel<Saidas.Ocorrencia> atualizar(@PathVariable Long id,
-                                                    @RequestBody @Valid Entradas.OcorrenciaEdicao dados, Authentication auth) {
+    public EntityModel<Saidas.Ocorrencia> atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid Entradas.OcorrenciaEdicao dados,
+            Authentication auth) {
 
         Saidas.Ocorrencia ocorrencia = ocorrencias.atualizar(id, dados, auth.getName());
         Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
@@ -86,12 +95,14 @@ public class OcorrenciasController {
         return modelo(ocorrencia, usuario);
     }
 
-    // Altera o status de uma ocorrência como administrador
+    // Altera o status de uma ocorrência como administrador.
     @Operation(summary = "Atualiza o status (somente administrador)")
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public EntityModel<Saidas.Ocorrencia> mudarStatus(@PathVariable Long id,
-                                                      @RequestBody @Valid Entradas.Status dados, Authentication auth) {
+    public EntityModel<Saidas.Ocorrencia> mudarStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid Entradas.Status dados,
+            Authentication auth) {
 
         Saidas.Ocorrencia ocorrencia = ocorrencias.mudarStatus(id, dados.status());
         Usuario usuario = autenticacao.usuarioAutenticado(auth.getName());
@@ -99,16 +110,20 @@ public class OcorrenciasController {
         return modelo(ocorrencia, usuario);
     }
 
-    // Exclui uma ocorrência conforme as regras de permissão
+    // Exclui uma ocorrência conforme as regras de permissão.
     @Operation(summary = "Remove relato permitido pela regra de negócio")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<Void> excluir(
+            @PathVariable Long id, Authentication auth) {
+
         ocorrencias.excluir(id, auth.getName());
         return ResponseEntity.noContent().build();
     }
 
-    // Adiciona links HATEOAS conforme as permissões do usuário
-    private EntityModel<Saidas.Ocorrencia> modelo(Saidas.Ocorrencia ocorrencia, Usuario usuario) {
+    // Adiciona links HATEOAS conforme as permissões do usuário.
+    private EntityModel<Saidas.Ocorrencia> modelo(
+            Saidas.Ocorrencia ocorrencia, Usuario usuario) {
+
         Long id = ocorrencia.id();
 
         EntityModel<Saidas.Ocorrencia> resposta = EntityModel.of(ocorrencia,

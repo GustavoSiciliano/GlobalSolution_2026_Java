@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,39 +33,52 @@ public class LeiturasController {
 
     private final LeituraSensorService leituras;
 
-    // Lista o histórico de leituras com paginação
+    // Lista o histórico de leituras com paginação.
     @Operation(summary = "Lista leituras de um ponto")
     @GetMapping
-    public Page<EntityModel<Saidas.Leitura>> listar(@PathVariable Long pontoId,
-                                                    @PageableDefault(size = 10, sort = "registradoEm", direction = Sort.Direction.DESC) Pageable pagina) {
+    public Page<EntityModel<Saidas.Leitura>> listar(
+            @PathVariable Long pontoId,
+            @ParameterObject
+            @PageableDefault(size = 10, sort = "registradoEm", direction = Sort.Direction.DESC)
+            Pageable pagina) {
 
-        return leituras.listar(pontoId, pagina).map(leitura -> modelo(pontoId, leitura));
+        return leituras.listar(pontoId, pagina)
+                .map(leitura -> modelo(pontoId, leitura));
     }
 
-    // Consulta uma leitura específica do ponto
+    // Consulta uma leitura específica do ponto.
     @Operation(summary = "Consulta uma leitura específica")
     @GetMapping("/{id}")
-    public EntityModel<Saidas.Leitura> detalhar(@PathVariable Long pontoId, @PathVariable Long id) {
+    public EntityModel<Saidas.Leitura> detalhar(
+            @PathVariable Long pontoId,
+            @PathVariable Long id) {
+
         return modelo(pontoId, leituras.detalhar(pontoId, id));
     }
 
-    // Registra uma nova leitura como administrador
+    // Registra uma nova leitura como administrador.
     @Operation(summary = "Registra uma leitura de sensor")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EntityModel<Saidas.Leitura>> registrar(@PathVariable Long pontoId,
-                                                                 @RequestBody @Valid Entradas.Leitura dados) {
+    public ResponseEntity<EntityModel<Saidas.Leitura>> registrar(
+            @PathVariable Long pontoId,
+            @RequestBody @Valid Entradas.Leitura dados) {
 
         Saidas.Leitura leitura = leituras.registrar(pontoId, dados);
 
-        return ResponseEntity.created(URI.create("/api/pontos-coleta/" + pontoId + "/leituras/" + leitura.id()))
+        return ResponseEntity.created(
+                        URI.create("/api/pontos-coleta/" + pontoId + "/leituras/" + leitura.id()))
                 .body(modelo(pontoId, leitura));
     }
 
-    // Adiciona links para a leitura e seu ponto de coleta
-    private EntityModel<Saidas.Leitura> modelo(Long pontoId, Saidas.Leitura leitura) {
+    // Adiciona links para a leitura e seu ponto de coleta.
+    private EntityModel<Saidas.Leitura> modelo(
+            Long pontoId, Saidas.Leitura leitura) {
+
         return EntityModel.of(leitura,
-                linkTo(methodOn(LeiturasController.class).detalhar(pontoId, leitura.id())).withSelfRel(),
-                linkTo(PontosColetaController.class).slash(pontoId).withRel("ponto"));
+                linkTo(methodOn(LeiturasController.class)
+                        .detalhar(pontoId, leitura.id())).withSelfRel(),
+                linkTo(PontosColetaController.class)
+                        .slash(pontoId).withRel("ponto"));
     }
 }

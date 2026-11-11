@@ -42,7 +42,7 @@ Optamos pelo **H2** para facilitar a execução e a avaliação do trabalho. Na 
 4. Para consultar o banco localmente, abra o [H2 Console](http://localhost:8080/h2-console) e informe:
 
    | Campo | Valor |
-      |---|---|
+         |---|---|
    | JDBC URL | `jdbc:h2:file:./data/binova` |
    | Usuário | `sa` |
    | Senha | Deixar em branco |
@@ -56,9 +56,9 @@ A aplicação permite criar duas contas fictícias, uma de **administrador** e o
 Para habilitá-la localmente, defina as variáveis abaixo no PowerShell antes de iniciar o projeto:
 
 ```powershell
-$env:BINOVA_DEMO_ENABLED="true"
-$env:BINOVA_ADMIN_PASSWORD="AdminLocal2026"
-$env:BINOVA_CIDADAO_PASSWORD="CidadaoLocal2026"
+$env:APP_DEMO_ENABLED="true"
+$env:APP_DEMO_ADMIN_PASSWORD="AdminLocal2026"
+$env:APP_DEMO_CIDADAO_PASSWORD="CidadaoLocal2026"
 
 .\mvnw.cmd spring-boot:run
 ```
@@ -247,4 +247,3 @@ No Linux ou macOS:
 ```
 
 O perfil `test` utiliza as configurações de `src/test/resources/application-test.yml`, com **H2 em memória**, separado do banco persistente da aplicação. O teste integrado habilita suas próprias contas de demonstração, sem depender de cadastros feitos manualmente.
-

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -39,7 +40,7 @@ public class PontosColetaController {
     public Page<EntityModel<Saidas.Ponto>> listar(
             @RequestParam(required = false) String termo,
             @RequestParam(required = false) Boolean ativo,
-            @PageableDefault(size = 10, sort = "id") Pageable pagina) {
+            @ParameterObject @PageableDefault(size = 10, sort = "id") Pageable pagina) {
 
         return pontos.listar(termo, ativo, pagina).map(this::modelo);
     }
@@ -49,7 +50,7 @@ public class PontosColetaController {
     @GetMapping("/busca-nome")
     public Page<EntityModel<Saidas.Ponto>> buscarPorNome(
             @RequestParam String nome,
-            @PageableDefault(size = 10, sort = "id") Pageable pagina) {
+            @ParameterObject @PageableDefault(size = 10, sort = "id") Pageable pagina) {
 
         return pontos.buscarPorNome(nome, pagina).map(this::modelo);
     }
@@ -73,10 +74,13 @@ public class PontosColetaController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EntityModel<Saidas.Ponto>> criar(@RequestBody @Valid Entradas.Ponto dados) {
+    public ResponseEntity<EntityModel<Saidas.Ponto>> criar(
+            @RequestBody @Valid Entradas.Ponto dados) {
+
         Saidas.Ponto ponto = pontos.criar(dados);
 
-        return ResponseEntity.created(URI.create("/api/pontos-coleta/" + ponto.id()))
+        return ResponseEntity.created(
+                        URI.create("/api/pontos-coleta/" + ponto.id()))
                 .body(modelo(ponto));
     }
 
@@ -85,7 +89,10 @@ public class PontosColetaController {
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public EntityModel<Saidas.Ponto> atualizar(@PathVariable Long id, @RequestBody @Valid Entradas.Ponto dados) {
+    public EntityModel<Saidas.Ponto> atualizar(
+            @PathVariable Long id,
+            @RequestBody @Valid Entradas.Ponto dados) {
+
         return modelo(pontos.atualizar(id, dados));
     }
 
