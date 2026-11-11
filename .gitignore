@@ -1,41 +1,45 @@
+
+# Arquivos gerados pelo Maven
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
+# Arquivos gerados pelo Java
+*.class
+*.log
+
+# Spring Tool Suite
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-# H2 persistente do Binova
+# Banco H2 persistente do Binova
 /data/
 *.mv.db
 *.trace.db
+*.lock.db
+
+# Variaveis de ambiente e segredos
 .env
-.idea/
-*.iml
+.env.*
+!.env.example

@@ -1,0 +1,42 @@
+
+spring:
+  application:
+    name: binova
+
+  datasource:
+    url: jdbc:h2:file:./data/binova
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+app:
+  jwt:
+    secret-base64: ${BINOVA_JWT_SECRET:}
+    minutos: 120
+
+  demo:
+    enabled: ${BINOVA_DEMO_ENABLED:false}
+    admin:
+      password: ${BINOVA_ADMIN_PASSWORD:}
+    cidadao:
+      password: ${BINOVA_CIDADAO_PASSWORD:}
+
+  cors:
+    origens: http://localhost:3000,http://localhost:5173
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
