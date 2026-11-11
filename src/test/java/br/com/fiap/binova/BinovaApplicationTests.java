@@ -8,9 +8,9 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class BinovaApplicationTests {
 
-	// Confirma que a aplicação inicializa sem erros de configuração.
-	@Test
-	void contextLoads() {
-	}
+    // Confirma que a aplicação inicializa sem erros de configuração.
+    @Test
+    void contextLoads() {
+    }
 
 }

@@ -12,7 +12,7 @@ import java.nio.file.Path;
 @EnableCaching
 public class BinovaApplication {
 
-    // Cria o diretorio do H2 antes de conectar no banco persistente.
+    // Cria o diretorio do H2
     public static void main(String[] args) throws IOException {
         Files.createDirectories(Path.of("data"));
         SpringApplication.run(BinovaApplication.class, args);
