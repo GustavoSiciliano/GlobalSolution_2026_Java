@@ -1,249 +1,407 @@
+# Binova - Java Advanced | FIAP Global Solution 2026/2
 
-# Binova | Java Advanced - FIAP Global Solution 2026/2
+**Tema:** CitizenTech  
+**Disciplina:** Java Advanced  
+**Turma:** 2TDSPS  
+**Repositório:** https://github.com/GustavoSiciliano/GlobalSolution_2026_Java  
+**Vídeo pitch:**
 
-O **Binova** é um projeto desenvolvido para a Global Solution 2026/2 da FIAP, dentro da proposta **CitizenTech**. A ideia é contribuir para o acompanhamento de pontos de coleta de resíduos, reunindo informações sobre o nível de preenchimento das lixeiras e os problemas relatados pelos cidadãos.
+> **Roteiro:** execute o projeto conforme a [seção 6](#6-configuração-e-execução), abra o **Swagger UI** e siga os testes da [seção 8](#8-roteiro-de-avaliação-pelo-swagger).
 
-Nesta etapa, desenvolvemos uma **API REST em Java 21 e Spring Boot 4.1.2**. Por meio dela, é possível cadastrar pontos de coleta, registrar leituras de sensores, consultar a situação das lixeiras e gerenciar ocorrências. As leituras são recebidas pela API, o que permite demonstrar o fluxo mesmo sem um dispositivo físico conectado.
+## 1. Apresentação do projeto
 
-## Integrantes
+O **Binova** é uma proposta CitizenTech para monitoramento de pontos de coleta de resíduos. Cidadãos podem consultar a situação das lixeiras e registrar ocorrências; a aplicação também recebe medições de sensores e ajuda a identificar pontos que precisam de atenção.
 
-- Gustavo de Jesus - RM 567926
-- Gustavo Siciliano - RM 568419
-- Samuel Keniti - RM 567614
-- Manuel Pedro - RM 567458
-- Vinicius Morrone - RM 566884
+Nesta disciplina, foi desenvolvida uma API REST com **Java 21 e Spring Boot 4.1.2**. A API oferece autenticação JWT, autorização por papel, consultas com Spring Data JPA, paginação, tratamento de erros, cache, respostas HATEOAS e monitoramento pelo Actuator. Para facilitar a execução local, utiliza **H2 persistente em arquivo**. Não é necessário ter um sensor físico: as leituras podem ser registradas pela própria API.
 
-## Tecnologias utilizadas
+## 2. Integrantes
 
-O projeto utiliza Java 21, Spring Boot 4.1.2, Spring Web, Spring Data JPA, Spring Security, JWT, BCrypt, Bean Validation, Spring HATEOAS, cache, Swagger/OpenAPI e H2. Os testes automatizados utilizam JUnit 5 e MockMvc, e o Spring Boot Actuator disponibiliza informações básicas de monitoramento.
+| Integrante | RM |
+|---|---|
+| Gustavo de Jesus | 567926 |
+| Gustavo Siciliano | 568419 |
+| Samuel Keniti | 567614 |
+| Manuel Pedro | 567458 |
+| Vinicius Morrone | 566884 |
 
-Optamos pelo **H2** para facilitar a execução e a avaliação do trabalho. Na aplicação principal, o banco é armazenado em arquivo; nos testes, é utilizado um banco separado, em memória.
+**Instituição:** FIAP  
+**Curso:** Análise e Desenvolvimento de Sistemas  
+**Turma:** 2TDSPS
 
-## Como executar
+## 3. Tecnologias utilizadas
 
-É necessário ter o **Java 21** instalado e acesso à internet na primeira execução, para que o Maven possa baixar as dependências.
+| Tecnologia | Uso no Binova |
+|---|---|
+| Java 21, Spring Boot e Spring Web MVC | Construção da API REST |
+| Spring Data JPA, Hibernate e H2 | Persistência, relacionamentos e consultas |
+| Bean Validation e `@RestControllerAdvice` | Validações e erros JSON |
+| Spring Security, JWT e BCrypt | Login, permissões e proteção de senhas |
+| Spring Cache | Cache das consultas de detalhes dos pontos |
+| Spring HATEOAS | Links para os recursos e ações relacionadas |
+| Spring Boot Actuator | `health`, `info` e `metrics` |
+| Swagger / OpenAPI | Documentação e execução interativa dos endpoints |
+| JUnit 5 e testes Spring | Testes automatizados da aplicação |
 
-1. Abra o projeto no IntelliJ IDEA ou VS Code, na pasta que contém o arquivo `pom.xml`.
-2. Execute o comando correspondente ao seu sistema operacional:
+### Estrutura principal
 
-   **Windows (PowerShell):**
+```text
+GlobalSolution_2026_Java/
+├── pom.xml
+├── mvnw
+├── mvnw.cmd
+├── README.md
+├── Diagram/
+│   └── Diagrama.png
+└── src/
+    ├── main/
+    │   ├── java/br/com/fiap/binova/
+    │   │   ├── api/
+    │   │   ├── config/
+    │   │   ├── domain/
+    │   │   ├── dto/
+    │   │   ├── repository/
+    │   │   ├── security/
+    │   │   ├── service/
+    │   │   └── specification/
+    │   └── resources/application.yaml
+    └── test/
+        ├── java/br/com/fiap/binova/
+        └── resources/
+```
 
-   ```powershell
-   .\mvnw.cmd spring-boot:run
-   ```
+## 4. Modelo de dados e relacionamentos JPA
 
-   **Linux ou macOS:**
+As quatro entidades persistidas são `Usuario`, `PontoColeta`, `Ocorrencia` e `LeituraSensor`.
 
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+![Diagrama de entidades JPA do Binova](Diagram/Diagrama.png)
 
-3. Com a aplicação iniciada, acesse o [Swagger](http://localhost:8080/swagger-ui.html) para visualizar e testar os endpoints.
-4. Para consultar o banco localmente, abra o [H2 Console](http://localhost:8080/h2-console) e informe:
+| Relacionamento | Cardinalidade | Implementação JPA |
+|---|---|---|
+| `Usuario` → `Ocorrencia` | 1:N | `@OneToMany(mappedBy = "usuario")` / `@ManyToOne` |
+| `PontoColeta` → `Ocorrencia` | 1:N | `@OneToMany(mappedBy = "pontoColeta")` / `@ManyToOne` |
+| `PontoColeta` → `LeituraSensor` | 1:N | `@OneToMany(mappedBy = "pontoColeta")` / `@ManyToOne` |
 
-   | Campo | Valor |
-         |---|---|
-   | JDBC URL | `jdbc:h2:file:./data/binova` |
-   | Usuário | `sa` |
-   | Senha | Deixar em branco |
+As entidades filhas utilizam `@ManyToOne(fetch = FetchType.LAZY, optional = false)` com `@JoinColumn`. O `LAZY` evita carregar imediatamente as entidades relacionadas; a camada de serviços controla o acesso aos dados. **Não existe `cascade` explícito** nessas associações. Os IDs utilizam `GenerationType.IDENTITY`; os valores de medição são `BigDecimal`, as datas `OffsetDateTime` e os campos de papel/tipo/status são enums persistidos como texto.
 
-Os dados são armazenados no arquivo `data/binova.mv.db` e permanecem disponíveis após reiniciar a aplicação. O Hibernate gerencia a criação e atualização das tabelas com `ddl-auto: update`. A pasta `data/` está incluída no `.gitignore` e não deve ser enviada ao GitHub.
+O ponto de coleta possui **exclusão lógica**: `DELETE` define `ativo = false` e preserva o histórico de leituras e ocorrências.
 
-## Contas para demonstração
+## 5. Banco de dados e contas de teste
 
-A aplicação permite criar duas contas fictícias, uma de **administrador** e outra de **cidadão**. Por segurança, essa opção fica desativada por padrão no `application.yml`.
+O arquivo `src/main/resources/application.yaml` configura o banco H2 local:
 
-Para habilitá-la localmente, defina as variáveis abaixo no PowerShell antes de iniciar o projeto:
+| Configuração | Valor |
+|---|---|
+| URL JDBC | `jdbc:h2:file:./data/binova;DB_CLOSE_ON_EXIT=FALSE` |
+| Usuário | `sa` |
+| Senha | Em branco |
+| Console | http://localhost:8080/h2-console |
+| Tabelas | Gerenciadas pelo Hibernate com `ddl-auto: update` |
+
+Os dados ficam em `data/binova.mv.db` e persistem entre reinicializações.
+
+### Contas de demonstração
+
+| Papel | E-mail | Senha de demonstração |
+|---|---|---|
+| `ADMIN` | `admin@binova.local` | `AdminLocal2026` |
+| `CIDADAO` | `cidadao@binova.local` | `CidadaoLocal2026` |
+
+Esses são **exemplos para uma execução local**, criados somente quando a opção de demonstração está habilitada e as senhas são fornecidas.
+
+## 6. Configuração e execução
+
+### 6.1 Pré-requisitos
+
+- JDK **21** instalado;
+- PowerShell no Windows (ou terminal compatível no Linux/macOS);
+- Conexão à internet na primeira execução para baixar dependências Maven;
+- Projeto aberto na pasta que contém `pom.xml`.
+
+Clone o repositório (ou extraia o ZIP e abra sua pasta):
 
 ```powershell
-$env:APP_DEMO_ENABLED="true"
-$env:APP_DEMO_ADMIN_PASSWORD="AdminLocal2026"
-$env:APP_DEMO_CIDADAO_PASSWORD="CidadaoLocal2026"
+git clone https://github.com/GustavoSiciliano/GlobalSolution_2026_Java.git
+cd .\GlobalSolution_2026_Java
+java -version
+.\mvnw.cmd -version
+```
 
+### 6.2 Preparar os perfis de demonstração
+
+No **mesmo PowerShell** em que você iniciará o Spring Boot:
+
+```powershell
+$env:BINOVA_DEMO = "true"
+$env:APP_DEMO_ADMIN_PASSWORD = "AdminLocal2026"
+$env:APP_DEMO_CIDADAO_PASSWORD = "CidadaoLocal2026"
+```
+
+A configuração real utiliza `app.demo.enabled` (variável `BINOVA_DEMO`) e as senhas de ambiente `APP_DEMO_ADMIN_PASSWORD` e `APP_DEMO_CIDADAO_PASSWORD`. Para não criar as contas de exemplo, utilize `BINOVA_DEMO=false` - nesse caso, o roteiro abaixo exigirá contas cadastradas por outro meio.
+
+O JWT usa uma chave temporária em desenvolvimento quando `JWT_SECRET_BASE64` não está definida. Tokens antigos deixam de valer ao reiniciar a aplicação. Se configurar uma chave própria, mantenha o segredo fora do GitHub e utilize Base64 de pelo menos 32 bytes.
+
+### 6.3 Compilar e iniciar
+
+```powershell
+.\mvnw.cmd clean verify
 .\mvnw.cmd spring-boot:run
 ```
 
-As contas criadas serão:
+O primeiro comando compila e executa os testes automatizados; o segundo inicia a aplicação. Mantenha o terminal da API aberto.
 
-| Perfil | E-mail | Senha no exemplo |
-|---|---|---|
-| Administrador | `admin@binova.local` | `AdminLocal2026` |
-| Cidadão | `cidadao@binova.local` | `CidadaoLocal2026` |
+| Recurso | Endereço local |
+|---|---|
+| **Swagger UI - avaliação da API** | http://localhost:8080/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8080/v3/api-docs |
+| H2 Console | http://localhost:8080/h2-console |
+| Actuator Health | http://localhost:8080/actuator/health |
+| Actuator Info | http://localhost:8080/actuator/info |
 
-Essas senhas são **apenas exemplos para testes locais** e não devem ser reutilizadas em ambientes reais. O sistema armazena as senhas utilizando **BCrypt** e não recria contas que já existam no banco. Portanto, alterar a variável de ambiente não troca a senha de um usuário já cadastrado.
+### 6.4 Conferir as tabelas pelo H2
 
-A autenticação utiliza **JWT**. Se `BINOVA_JWT_SECRET` não estiver definida, o serviço gera uma chave temporária ao iniciar; nesse caso, os tokens anteriores deixam de funcionar depois de uma reinicialização. Para manter a mesma chave, configure essa variável com um segredo seguro em Base64, correspondente a pelo menos 32 bytes, sem incluí-lo no repositório.
+Com a API iniciada, abra http://localhost:8080/h2-console e use a URL `jdbc:h2:file:./data/binova`, usuário `sa` e senha vazia. Execute:
 
-## Testando a API pelo Swagger
-
-O Swagger permite executar as requisições diretamente pelo navegador. Para demonstrar o fluxo principal:
-
-1. Acesse `POST /api/auth/login` e faça login com uma das contas de demonstração. Para o administrador, por exemplo:
-
-   ```json
-   {
-     "email": "admin@binova.local",
-     "senha": "AdminLocal2026"
-   }
-   ```
-
-2. Copie o campo `token` retornado, clique em **Authorize** no Swagger e informe o JWT.
-3. Cadastre um ponto em `POST /api/pontos-coleta`:
-
-   ```json
-   {
-     "nome": "Lixeira da biblioteca",
-     "descricaoLocalizacao": "Entrada da biblioteca",
-     "capacidadeLitros": 80
-   }
-   ```
-
-4. Consulte `GET /api/pontos-coleta` e anote o `id` criado. Em seguida, registre uma leitura em `POST /api/pontos-coleta/{pontoId}/leituras`:
-
-   ```json
-   {
-     "distanciaCm": 12,
-     "nivelPercentual": 85
-   }
-   ```
-
-5. Acesse `GET /api/pontos-coleta/{id}/situacao`. Para uma leitura recente com 85% de preenchimento, o resultado esperado é `PROXIMA_DO_LIMITE`.
-6. Faça login com a conta de cidadão e registre uma ocorrência em `POST /api/ocorrencias`:
-
-   ```json
-   {
-     "pontoColetaId": 1,
-     "tipo": "LIXEIRA_CHEIA",
-     "descricao": "Lixeira cheia na entrada da biblioteca"
-   }
-   ```
-
-   Substitua `1` pelo ID do ponto cadastrado. Depois, com a conta de administrador, é possível alterar o atendimento por `PATCH /api/ocorrencias/{id}/status`:
-
-   ```json
-   {
-     "status": "EM_ATENDIMENTO"
-   }
-   ```
-
-## Principais endpoints
-
-| Método | Rota | Acesso |
-|---|---|---|
-| `POST` | `/api/auth/cadastro` | Público; cadastra um cidadão |
-| `POST` | `/api/auth/login` | Público |
-| `GET` | `/api/usuarios/me` | Autenticado |
-| `GET` | `/api/pontos-coleta` | Público; filtros e paginação |
-| `GET` | `/api/pontos-coleta/busca-nome` | Público; pesquisa por nome |
-| `GET` | `/api/pontos-coleta/{id}` | Público; detalhes e links HATEOAS |
-| `GET` | `/api/pontos-coleta/{id}/situacao` | Público; situação da última leitura |
-| `POST` | `/api/pontos-coleta` | Administrador |
-| `PUT`, `DELETE` | `/api/pontos-coleta/{id}` | Administrador |
-| `PATCH` | `/api/pontos-coleta/{id}/reativar` | Administrador |
-| `GET` | `/api/pontos-coleta/{pontoId}/leituras` | Autenticado |
-| `GET` | `/api/pontos-coleta/{pontoId}/leituras/{id}` | Autenticado |
-| `POST` | `/api/pontos-coleta/{pontoId}/leituras` | Administrador |
-| `GET`, `POST` | `/api/ocorrencias` | Autenticado |
-| `GET`, `PUT`, `DELETE` | `/api/ocorrencias/{id}` | Autenticado, conforme autoria e regras de negócio |
-| `PATCH` | `/api/ocorrencias/{id}/status` | Administrador |
-| `GET` | `/actuator/health`, `/actuator/info` | Público |
-| `GET` | `/actuator/metrics` | Administrador |
-
-Nas listagens, é possível utilizar parâmetros como `page`, `size` e `sort`. A consulta de pontos também aceita os filtros `termo` e `ativo`, enquanto a listagem de ocorrências aceita o filtro `status`.
-
-O histórico de leituras exige autenticação, mesmo que a consulta dos pontos e da situação das lixeiras seja pública. A documentação OpenAPI também pode ser consultada em `/v3/api-docs`.
-
-## Modelo de dados
-
-O modelo contém quatro entidades principais: **Usuario**, **PontoColeta**, **LeituraSensor** e **Ocorrencia**.
-
-```mermaid
-erDiagram
-    USUARIO ||--o{ OCORRENCIA : registra
-    PONTO_COLETA ||--o{ OCORRENCIA : recebe
-    PONTO_COLETA ||--o{ LEITURA_SENSOR : possui
-
-    USUARIO {
-        long id PK
-        string nome
-        string email
-        string senhaHash
-        string papel
-        datetime criadoEm
-    }
-
-    PONTO_COLETA {
-        long id PK
-        string nome
-        string descricaoLocalizacao
-        decimal capacidadeLitros
-        boolean ativo
-        datetime criadoEm
-    }
-
-    LEITURA_SENSOR {
-        long id PK
-        long pontoColetaId FK
-        decimal distanciaCm
-        decimal nivelPercentual
-        datetime registradoEm
-    }
-
-    OCORRENCIA {
-        long id PK
-        long pontoColetaId FK
-        long usuarioId FK
-        string tipo
-        string descricao
-        string status
-        datetime criadoEm
-        datetime atualizadoEm
-    }
+```sql
+SELECT * FROM USUARIO;
+SELECT * FROM PONTO_COLETA;
+SELECT * FROM LEITURA_SENSOR;
+SELECT * FROM OCORRENCIA;
 ```
 
-Os relacionamentos são mapeados com JPA, utilizando `@ManyToOne` e `@OneToMany`. As leituras pertencem a um ponto de coleta, enquanto as ocorrências estão associadas a um ponto e ao cidadão que as registrou.
+O console H2 integrado à aplicação é preferível a abrir outra instância externa sobre o mesmo arquivo do banco.
 
-A exclusão de pontos de coleta é **lógica**: o campo `ativo` passa a ser `false`, preservando as leituras e ocorrências anteriores. Não utilizamos exclusão em cascata nesses relacionamentos.
+## 7. Endpoints principais
 
-## Decisões técnicas e regras de negócio
+| Método | Rota | Acesso | Resposta de sucesso |
+|---|---|---|---|
+| `POST` | `/api/auth/cadastro` | Público | 201 |
+| `POST` | `/api/auth/login` | Público | 200 + JWT |
+| `GET` | `/api/usuarios/me` | Autenticado | 200 |
+| `GET` | `/api/pontos-coleta` | Público | 200 |
+| `GET` | `/api/pontos-coleta/busca-nome?nome=...` | Público | 200 |
+| `GET` | `/api/pontos-coleta/{id}` | Público | 200 |
+| `GET` | `/api/pontos-coleta/{id}/situacao` | Público | 200 |
+| `POST` | `/api/pontos-coleta` | ADMIN | 201 |
+| `PUT` | `/api/pontos-coleta/{id}` | ADMIN | **200 + JSON** |
+| `DELETE` | `/api/pontos-coleta/{id}` | ADMIN | **204** (desativação lógica) |
+| `PATCH` | `/api/pontos-coleta/{id}/reativar` | ADMIN | 200 |
+| `GET` | `/api/pontos-coleta/{pontoId}/leituras` | Autenticado | 200 |
+| `GET` | `/api/pontos-coleta/{pontoId}/leituras/{id}` | Autenticado | 200 |
+| `POST` | `/api/pontos-coleta/{pontoId}/leituras` | ADMIN | 201 |
+| `GET`, `POST` | `/api/ocorrencias` | Autenticado | 200 / 201 |
+| `GET`, `PUT`, `DELETE` | `/api/ocorrencias/{id}` | Autenticado, conforme autoria e regras | 200 / 204 |
+| `PATCH` | `/api/ocorrencias/{id}/status` | ADMIN | 200 |
+| `GET` | `/actuator/health`, `/actuator/info` | Público | 200 |
+| `GET` | `/actuator/metrics` | ADMIN | 200 |
 
-Além do CRUD, o projeto utiliza diferentes formas de consulta com Spring Data JPA. Os métodos derivados do repositório atendem a buscas simples, como pontos ativos e a leitura mais recente de cada ponto. A pesquisa textual por nome utiliza **JPQL**, e a classe `PontoSpecifications` combina filtros opcionais de nome e atividade. As listagens também oferecem paginação e ordenação.
+As listagens utilizam `page`, `size` e `sort`; pontos aceitam `termo` e `ativo`, ocorrências aceitam `status`.
 
-O **cache** é aplicado à consulta de detalhes dos pontos de coleta. Quando um ponto é cadastrado, atualizado, desativado ou reativado, as entradas correspondentes são invalidadas para evitar informações desatualizadas.
+## 8. Roteiro de avaliação pelo Swagger
 
-Com **HATEOAS**, as respostas apresentam links para recursos relacionados, como a situação e as leituras de um ponto. As ações administrativas são exibidas de acordo com o perfil autenticado, mas as permissões são efetivamente verificadas pelo Spring Security e pelos serviços.
+Acesse **http://localhost:8080/swagger-ui.html**. Em cada endpoint: abra a operação, clique em **Try it out**, preencha o JSON, clique em **Execute** e confira **Response code** e **Response body**. Siga a sequência abaixo. **Use os IDs retornados pelo próprio Swagger, sem pressupor registros anteriores.**
 
-A situação das lixeiras é calculada a partir da leitura mais recente:
+### 8.1 Autenticação JWT (ADMIN)
 
-| Nível de preenchimento | Situação |
-|---|---|
-| Abaixo de 50% | `DISPONIVEL` |
-| De 50% até menos de 80% | `ATENCAO` |
-| De 80% a 100% | `PROXIMA_DO_LIMITE` |
+Abra `POST /api/auth/login` e envie:
 
-Essa classificação considera apenas leituras válidas, realizadas nos últimos **15 minutos**. Na ausência de dados recentes, ou quando a leitura é inválida, o retorno é `SEM_DADOS_ATUALIZADOS`.
+```json
+{
+  "email": "admin@binova.local",
+  "senha": "AdminLocal2026"
+}
+```
 
-A autenticação utiliza JWT e senhas protegidas por BCrypt. Os perfis **CIDADAO** e **ADMIN** definem o acesso às operações. Os DTOs aplicam validações aos dados recebidos, e o tratamento de exceções contempla respostas HTTP como **400, 403, 404 e 409**. As respostas de autenticação, incluindo **401**, também são tratadas pela configuração do Spring Security.
+**Esperado:** HTTP **200** e objeto com `token`, `tipo`, `expiraEmSegundos` e `papel`. Copie **somente o valor de `token`** e clique em **Authorize** no Swagger para inserir o JWT no esquema `bearerAuth`. A autorização deverá ser enviada como `Authorization: Bearer <token>`.
 
-## Testes automatizados
+Se a conta já existia no H2 com outra senha, use a senha anterior ou configure um banco novo **exclusivo para testes**, sem apagar dados importantes.
 
-Os testes estão em `src/test/java` e foram organizados para verificar diferentes partes da aplicação:
+### 8.2 POST - cadastrar ponto de coleta
 
-- `BinovaApplicationTests`: inicialização do contexto Spring Boot;
-- `JwtServiceTest`: geração e validação de JWT e rejeição de chave curta;
-- `SituacaoPontoServiceTest`: limites de preenchimento e validade das leituras;
-- `FluxoApiTest`: fluxo HTTP com cadastro, login, permissões, pontos de coleta, leituras, ocorrências, filtros, cache e links HATEOAS.
+Abra `POST /api/pontos-coleta` com o perfil ADMIN autorizado:
 
-Para executar a verificação completa no Windows:
+```json
+{
+  "nome": "Ecoponto Avaliacao Java",
+  "descricaoLocalizacao": "Entrada da biblioteca",
+  "capacidadeLitros": 80
+}
+```
+
+**Esperado:** HTTP **201 Created**, retorno do ponto e cabeçalho `Location` com `/api/pontos-coleta/{id}`. **Anote o `id` criado** para os próximos testes.
+
+### 8.3 GET - consultar ponto, filtros e HATEOAS
+
+Execute no Swagger:
+
+1. `GET /api/pontos-coleta/{id}` com o ID recém-criado → **200**, incluindo os dados e os links `_links` como `self`, `situacao` e `leituras`;
+2. `GET /api/pontos-coleta` → **200**, com paginação; pode testar `page=0`, `size=10`, `sort=id,asc`;
+3. `GET /api/pontos-coleta?ativo=true` → **200**, filtrando os ativos;
+4. `GET /api/pontos-coleta/busca-nome?nome=Ecoponto` → **200**, para demonstrar a consulta JPQL.
+
+As respostas de detalhes são cacheadas pelo serviço; o cache é invalidado nas operações de alteração.
+
+### 8.4 PUT - atualizar ponto de coleta
+
+Abra `PUT /api/pontos-coleta/{id}` com o **mesmo ID**, e envie:
+
+```json
+{
+  "nome": "Ecoponto Java Atualizado",
+  "descricaoLocalizacao": "Entrada principal - Bloco B",
+  "capacidadeLitros": 120
+}
+```
+
+**Esperado:** HTTP **200 OK** com o registro atualizado. Repita `GET /api/pontos-coleta/{id}` para confirmar os novos valores. O `GET` após a edição também demonstra que o cache não manteve os dados antigos.
+
+### 8.5 DELETE - desativação lógica
+
+Abra `DELETE /api/pontos-coleta/{id}` com o mesmo ID e execute como ADMIN.
+
+**Esperado:** HTTP **204 No Content**. Faça `GET /api/pontos-coleta/{id}`: o ponto ainda existe, mas `ativo` deve estar como `false`. Isso preserva leituras e ocorrências.
+
+Para continuar a demonstração do sensor, execute `PATCH /api/pontos-coleta/{id}/reativar` como ADMIN (**200**).
+
+### 8.6 Tratamento de erros - 400 e 404
+
+**POST inválido - 400 Bad Request.** Abra `POST /api/pontos-coleta` como ADMIN e envie:
+
+```json
+{
+  "nome": "",
+  "descricaoLocalizacao": "",
+  "capacidadeLitros": 0
+}
+```
+
+**Esperado:** HTTP **400** com erro padronizado em JSON e campos inválidos.
+
+**GET inexistente - 404 Not Found.** Abra `GET /api/pontos-coleta/{id}` com `999999999`.
+
+**Esperado:** HTTP **404** em JSON, com a mensagem de recurso não encontrado.
+
+### 8.7 Segurança por papéis - 403
+
+No Swagger, utilize **Authorize** com um novo token do perfil CIDADAO. Para obtê-lo, execute `POST /api/auth/login`:
+
+```json
+{
+  "email": "cidadao@binova.local",
+  "senha": "CidadaoLocal2026"
+}
+```
+
+Com o token do cidadão, tente `POST /api/pontos-coleta` usando o JSON válido do passo 8.2.
+
+**Esperado:** HTTP **403 Forbidden**. A rota de cadastro de pontos é permitida apenas para ADMIN. Depois, autorize-se novamente com o token de ADMIN para os testes administrativos restantes.
+
+### 8.8 Leitura de sensor e situação do ponto
+
+Utilize o mesmo ponto já **reativado** e a autenticação ADMIN. Abra `POST /api/pontos-coleta/{pontoId}/leituras`, preencha o ID e envie:
+
+```json
+{
+  "distanciaCm": 12,
+  "nivelPercentual": 85
+}
+```
+
+**Esperado:** HTTP **201 Created**. Em seguida, execute `GET /api/pontos-coleta/{id}/situacao` (**200**). Uma leitura válida e recente de 85% deve produzir `PROXIMA_DO_LIMITE`. Após **15 minutos**, a mesma leitura poderá resultar em `SEM_DADOS_ATUALIZADOS`. Com usuário autenticado, consulte também o histórico pelo endpoint `GET /api/pontos-coleta/{pontoId}/leituras`.
+
+### 8.9 Ocorrências registradas por cidadãos
+
+Autorize o perfil CIDADAO e execute `POST /api/ocorrencias`:
+
+```json
+{
+  "pontoColetaId": 1,
+  "tipo": "LIXEIRA_CHEIA",
+  "descricao": "Lixeira cheia na entrada da biblioteca"
+}
+```
+
+**Substitua `1` pelo ID do ponto reativado.** O usuário da ocorrência é definido pelo JWT; não é enviado no JSON. **Esperado:** HTTP **201 Created**.
+
+Com o perfil ADMIN, utilize `PATCH /api/ocorrencias/{id}/status`:
+
+```json
+{
+  "status": "EM_ATENDIMENTO"
+}
+```
+
+**Esperado:** HTTP **200**, demonstrando a alteração do atendimento.
+
+### 8.10 Actuator e monitoramento
+
+Acesse no navegador ou pelo Swagger, quando disponíveis na lista de endpoints:
+
+- http://localhost:8080/actuator/health - **200**, saúde da API;
+- http://localhost:8080/actuator/info - **200**, identificação da aplicação;
+- http://localhost:8080/actuator/metrics - **200 apenas com JWT ADMIN**; fora do Swagger, use um cliente HTTP que permita enviar o cabeçalho `Authorization: Bearer <token>`.
+
+A rota `metrics` está protegida. Não é necessário tornar esse endpoint público para a demonstração.
+
+## 9. Decisões técnicas e justificativas
+
+### 9.1 Consultas JPA
+
+- **Método derivado:** `PontoColetaRepository.findByAtivoTrue(Pageable)` lista pontos ativos com paginação; `LeituraSensorRepository.findFirstByPontoColetaIdOrderByRegistradoEmDesc` recupera a medição mais recente. São consultas simples expressas pelo nome do método.
+- **JPQL (`@Query`):** `PontoColetaRepository.buscarPorNome` faz busca textual com `lower(...)` e paginação, útil para localizar lixeiras por nome sem diferenciar maiúsculas e minúsculas.
+- **Specification:** `PontoSpecifications.filtros` combina dinamicamente os filtros opcionais de texto e atividade. Isso evita diversos métodos específicos para cada combinação.
+- **Paginação e ordenação:** `Pageable` reduz o volume de dados das listagens e permite definir `page`, `size` e `sort`.
+
+### 9.2 Cache
+
+`PontoColetaService.consultar(Long id)` utiliza `@Cacheable(value = "pontos", key = "#id")` na consulta de detalhes de cada ponto. `criar`, `atualizar`, `desativar` e `reativar` utilizam `@CacheEvict(value = "pontos", allEntries = true)` para invalidar a informação depois de alterações. O cache configurado é **simples e em memória**.
+
+### 9.3 Segurança JWT e CORS
+
+O login valida e-mail e senha (BCrypt), emite JWT e permite acessar endpoints protegidos por papel. O perfil `ADMIN` pode criar e administrar pontos e lançar leituras; o `CIDADAO` pode registrar ocorrências. A verificação de permissões ocorre no Spring Security e nos serviços, não apenas na interface do Swagger. O CORS permite, por padrão, `http://localhost:3000`, `http://localhost:5173` e `http://localhost:8081`, configuráveis por `APP_CORS_ALLOWED_ORIGINS`.
+
+### 9.4 HATEOAS
+
+Os detalhes dos pontos e os recursos de ocorrências usam `EntityModel`, incluindo links `self` e para recursos relacionados. A presença de links administrativos depende do perfil e do estado do recurso; as autorizações reais continuam sendo aplicadas pela segurança.
+
+### 9.5 Regras de negócio
+
+Uma leitura válida e recente define a situação do ponto: abaixo de 50% = `DISPONIVEL`; de 50% até menos de 80% = `ATENCAO`; de 80% a 100% = `PROXIMA_DO_LIMITE`. Na ausência de leitura, após 15 minutos ou com dados inválidos, a situação é `SEM_DADOS_ATUALIZADOS`.
+
+## 10. Testes automatizados
+
+O código contém testes Spring/JUnit para inicialização do contexto, JWT, cálculo de situação e fluxo de API com autenticação, permissões, pontos, leituras, ocorrências e demais recursos. Execute na raiz do repositório:
 
 ```powershell
 .\mvnw.cmd clean verify
 ```
 
-No Linux ou macOS:
+## 11. Problemas comuns e correções
 
-```bash
-./mvnw clean verify
+| Sintoma | Verificação e solução |
+|---|---|
+| Java ou Maven não encontrado | Confira `java -version` (JDK 21). Use `mvnw.cmd`, não é necessário instalar Maven globalmente. |
+| API não inicia: faltam senhas de demonstração | No mesmo terminal, defina `BINOVA_DEMO=true`, `APP_DEMO_ADMIN_PASSWORD` e `APP_DEMO_CIDADAO_PASSWORD`; depois inicie de novo. |
+| Login do exemplo retorna 401 | Confira o perfil, a senha e se já existem contas antigas no H2; reiniciar não altera senhas antigas. |
+| Swagger exibe 401 em operação protegida | Faça login e clique em **Authorize**; informe um token válido. |
+| Swagger exibe 403 no POST de pontos | É necessário utilizar JWT com papel `ADMIN`, não `CIDADAO`. |
+| Token deixa de funcionar após reinício | Gere um novo token: a chave padrão do JWT é temporária em desenvolvimento. |
+| Porta 8080 em uso | Encerre a outra API ou defina `$env:SERVER_PORT="8081"` antes de iniciar; ajuste as URLs dos testes. |
+| HTTP 404 / 405 | Verifique o ID e o método; a leitura usa `GET` e `POST` em rota aninhada, não `DELETE`. |
+| H2 ocupado / arquivo em uso | Não inicie duas instâncias usando o mesmo arquivo H2; use o console da aplicação iniciada. |
+| Necessidade de dados limpos para avaliar | Em um ambiente de testes, use um novo arquivo H2 configurado via `SPRING_DATASOURCE_URL`; não apague dados existentes sem confirmação. |
+
+Para conferir a porta no Windows:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue |
+    Select-Object LocalPort, OwningProcess
 ```
 
-O perfil `test` utiliza as configurações de `src/test/resources/application-test.yml`, com **H2 em memória**, separado do banco persistente da aplicação. O teste integrado habilita suas próprias contas de demonstração, sem depender de cadastros feitos manualmente.
+Se for necessário usar outra porta, faça antes de iniciar:
+
+```powershell
+$env:SERVER_PORT = "8081"
+.\mvnw.cmd spring-boot:run
+```
+
+Ao iniciar novamente em outro PowerShell, configure também as variáveis de demonstração nesse terminal.
