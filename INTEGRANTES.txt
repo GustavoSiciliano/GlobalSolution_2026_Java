@@ -13,4 +13,4 @@ Vinicius Morrone - RM 566884
 REPOSITORIO GITHUB:
 https://github.com/GustavoSiciliano/GlobalSolution_2026_Java
 
-VÍDEO:
+VÍDEO: https://youtu.be/2SlwoG4p7Oc

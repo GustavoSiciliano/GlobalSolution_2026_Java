@@ -4,15 +4,19 @@
 **Disciplina:** Java Advanced  
 **Turma:** 2TDSPS  
 **Repositório:** https://github.com/GustavoSiciliano/GlobalSolution_2026_Java  
-**Vídeo pitch:**
+**Vídeo demonstrativo de Java:** https://youtu.be/2SlwoG4p7Oc  
+**Mobile integrado:** https://github.com/Mpgouveia-n/Binova---Application-Mobile-Development-  
+**Protótipo mobile:** https://www.figma.com/design/qxJAkVzKzr1JdKEHtsQDuU
 
-> **Roteiro:** execute o projeto conforme a [seção 6](#6-configuração-e-execução), abra o **Swagger UI** e siga os testes da [seção 8](#8-roteiro-de-avaliação-pelo-swagger).
+> **Como avaliar:** siga a [instalação do Java](#6-configuração-e-execução), o [roteiro pelo Swagger](#8-roteiro-de-avaliação-pelo-swagger) e a [integração Java e Mobile](#13-execução-integrada-com-o-mobile-em-dart).
 
 ## 1. Apresentação do projeto
 
 O **Binova** é uma proposta CitizenTech para monitoramento de pontos de coleta de resíduos. Cidadãos podem consultar a situação das lixeiras e registrar ocorrências; a aplicação também recebe medições de sensores e ajuda a identificar pontos que precisam de atenção.
 
 Nesta disciplina, foi desenvolvida uma API REST com **Java 21 e Spring Boot 4.1.2**. A API oferece autenticação JWT, autorização por papel, consultas com Spring Data JPA, paginação, tratamento de erros, cache, respostas HATEOAS e monitoramento pelo Actuator. Para facilitar a execução local, utiliza **H2 persistente em arquivo**. Não é necessário ter um sensor físico: as leituras podem ser registradas pela própria API.
+
+O projeto Java também pode ser utilizado pelo **Binova Mobile em Dart Console**, por meio de requisições HTTP com JSON. A API centraliza autenticação, permissões, consultas, classificação de preenchimento e registro das ocorrências; o Mobile apresenta essas operações ao cidadão. O protótipo visual no Figma apresenta a proposta de interface para celular e é independente da execução em Dart Console.
 
 ## 2. Integrantes
 
@@ -147,7 +151,7 @@ O JWT usa uma chave temporária em desenvolvimento quando `JWT_SECRET_BASE64` n�
 .\mvnw.cmd spring-boot:run
 ```
 
-O primeiro comando compila e executa os testes automatizados; o segundo inicia a aplicação. Mantenha o terminal da API aberto.
+O primeiro comando compila e executa os testes automatizados; o segundo inicia a aplicação. Mantenha o terminal da API aberto. Nas próximas inicializações, não é necessário repetir `clean verify` se o código não mudou; basta executar `.\mvnw.cmd spring-boot:run` no terminal do Java.
 
 | Recurso | Endereço local |
 |---|---|
@@ -405,3 +409,156 @@ $env:SERVER_PORT = "8081"
 ```
 
 Ao iniciar novamente em outro PowerShell, configure também as variáveis de demonstração nesse terminal.
+
+## 12. ODS e impacto do projeto
+
+O Binova se relaciona com dois Objetivos de Desenvolvimento Sustentável (ODS) da Agenda 2030 da ONU:
+
+| ODS | Relação com o Binova |
+|---|---|
+| **ODS 11: Cidades e Comunidades Sustentáveis** | Contribui para o acompanhamento de pontos de coleta e a identificação de problemas em espaços urbanos, apoiando a organização dos serviços e a participação dos moradores. |
+| **ODS 12: Consumo e Produção Responsáveis** | Incentiva a atenção ao descarte de resíduos, permitindo identificar recipientes próximos da capacidade e situações de descarte inadequado. |
+
+Os cidadãos que utilizam os pontos de coleta são os principais beneficiados. Os responsáveis pela gestão urbana também podem utilizar as informações para acompanhar ocorrências e priorizar ações. O projeto demonstra essas possibilidades por meio da API e de um fluxo de participação cidadã; não representa, por si só, uma medição de impacto real em campo.
+
+## 13. Execução integrada com o Mobile em Dart
+
+**Repositório Mobile:** https://github.com/Mpgouveia-n/Binova---Application-Mobile-Development-
+
+O projeto de Mobile possui uma versão independente em Dart Console, com dados em memória, e uma execução separada preparada para consumir a API Java. Para demonstrar a comunicação HTTP, utilize **a execução integrada**, não o `bin/main.dart` da versão local.
+
+### 13.1. Iniciar a API Java (terminal 1)
+
+Clone e entre no repositório Java ou abra a pasta já baixada. No PowerShell, no diretório com `pom.xml`:
+
+```powershell
+$env:BINOVA_DEMO = "true"
+$env:APP_DEMO_ADMIN_PASSWORD = "AdminLocal2026"
+$env:APP_DEMO_CIDADAO_PASSWORD = "CidadaoLocal2026"
+
+.\mvnw.cmd spring-boot:run
+```
+
+Aguarde a inicialização completa e confirme que o processo continua ativo, sem `Application run failed`. A API atende em `http://localhost:8080`. Para conferir, abra:
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- Saúde da API: http://localhost:8080/actuator/health
+
+Se for a primeira execução, os dados de usuário de demonstração são configurados pelas variáveis acima. As informações persistidas no H2 não são apagadas a cada reinício; senhas antigas permanecem se os usuários já estiverem cadastrados.
+
+### 13.2. Preparar um ponto de coleta no Java
+
+A listagem integrada consulta os dados armazenados no **H2 do Java** e não utiliza os pontos simulados do Mobile original. Em uma base nova, a lista pode estar vazia até que um ponto seja cadastrado.
+
+1. No Swagger, abra `POST /api/auth/login`, informe `admin@binova.local` e `AdminLocal2026` e execute.
+2. Copie o valor do campo `token` retornado e utilize o botão **Authorize** para autorizar o esquema JWT `bearerAuth`.
+3. Execute `POST /api/pontos-coleta` com o JSON abaixo:
+
+```json
+{
+  "nome": "Ecoponto Binova Integracao",
+  "descricaoLocalizacao": "Entrada principal do bairro",
+  "capacidadeLitros": 100
+}
+```
+
+4. Confira a resposta **201** e guarde o `id` devolvido pela API.
+5. Execute `GET /api/pontos-coleta?ativo=true` e confirme que o ponto aparece na propriedade `content` da resposta paginada.
+
+Apenas o perfil `ADMIN` pode cadastrar pontos. Para demonstrar o nível de preenchimento, utilize também `POST /api/pontos-coleta/{pontoId}/leituras` com token de administrador. O exemplo de leitura e sua classificação estão na seção 8.8. A leitura deve ser recente, pois a situação considera uma janela de 15 minutos.
+
+### 13.3. Executar o Mobile integrado (terminal 2)
+
+Abra outro PowerShell, mantendo o Java ativo no primeiro terminal:
+
+```powershell
+git clone https://github.com/Mpgouveia-n/Binova---Application-Mobile-Development-.git
+cd .\Binova---Application-Mobile-Development-
+dart --version
+dart pub get
+dart run lib/api/bin/main_api.dart
+```
+
+Se já clonou o Mobile, abra diretamente a pasta que contém o `pubspec.yaml` e execute os três últimos comandos. O pacote utiliza Dart com SDK compatível com `^3.13.1`.
+
+**Estrutura da integração no Mobile:**
+
+```text
+lib/api/
+├── api_config.dart
+├── api_client.dart
+├── bin/
+│   └── main_api.dart
+├── console/
+│   └── binova_console_api.dart
+└── services/
+    ├── auth_api_service.dart
+    ├── ponto_coleta_api_service.dart
+    └── ocorrencia_api_service.dart
+```
+
+O arquivo `lib/api/api_config.dart` deve apontar para o mesmo servidor em que o Java está em execução:
+
+```dart
+static const String baseUrl = 'http://localhost:8080';
+```
+
+Esse endereço funciona quando Java e Dart Console estão **no mesmo computador**. Caso execute a API em outra máquina ou porta, configure `baseUrl` com o endereço e a porta corretos. Como a comunicação é feita pelo Dart Console, não é necessário configurar um navegador ou um emulador para esse fluxo.
+
+### 13.4. Fazer login e consultar os pontos pelo Mobile
+
+No menu inicial do Mobile integrado, selecione **Entrar com e-mail e senha** e informe:
+
+```text
+E-mail: cidadao@binova.local
+Senha: CidadaoLocal2026
+```
+
+O Dart envia `POST /api/auth/login`, recebe o JWT e utiliza o token nas chamadas protegidas. Após a identificação, execute esta sequência:
+
+1. **Listar pontos de coleta ativos** para consultar `GET /api/pontos-coleta?ativo=true`.
+2. **Consultar ponto por ID e situação** para chamar `GET /api/pontos-coleta/{id}` e `GET /api/pontos-coleta/{id}/situacao`.
+3. **Pesquisar pontos por nome** e informe `Ecoponto`, para usar a busca da API Java.
+4. **Painel geral dos pontos** para reunir a situação dos pontos ativos consultados.
+
+Se a listagem não trouxer resultados, verifique primeiro o cadastro do ponto no Java e se ele está ativo. Uma resposta vazia não indica necessariamente falha na conexão.
+
+### 13.5. Registrar uma ocorrência e confirmar no Swagger
+
+No Mobile integrado, com o cidadão autenticado:
+
+1. Escolha **Registrar ocorrência**.
+2. Informe o `id` de um ponto ativo criado na etapa 13.2.
+3. Selecione **Lixeira cheia** e escreva uma descrição.
+4. Confirme o cadastro. O Dart envia `POST /api/ocorrencias` com `pontoColetaId`, `tipo` e `descricao`, e o Java identifica o cidadão pelo JWT.
+5. Acesse **Minhas ocorrências** no Mobile para consultar o registro retornado pela API.
+
+Para conferir a mesma informação diretamente no Java, no Swagger, faça login como `cidadao@binova.local`, autorize o JWT desse cidadão e execute `GET /api/ocorrencias`. Confira o mesmo ID e a descrição registrada no Mobile. Com outro cidadão, a listagem poderá ser diferente devido à regra de acesso por autoria.
+
+**Fluxo demonstrado:** `Mobile Dart Console → HTTP/JSON → Spring Boot → H2 → resposta HTTP → Mobile`. O processamento e a persistência ficam no Java; o Dart apresenta as informações e recolhe os dados fornecidos pelo cidadão.
+
+### 13.6. Problemas comuns na integração
+
+| Situação | Como resolver |
+|---|---|
+| Mobile não conecta ao servidor | Confirme que o Java continua executando e que `api_config.dart` usa o mesmo endereço e porta. |
+| `Connection refused` ou falha de conexão | Abra `http://localhost:8080/actuator/health` no computador em que o Mobile está sendo executado. |
+| Login retorna 401 | Confirme e-mail, senha e a configuração das contas no H2. Usuários já existentes podem ter senha anterior. |
+| Operação retorna 403 | Confira se o JWT é de `ADMIN` ou `CIDADAO`, conforme a permissão do endpoint. |
+| Lista de pontos vazia | Cadastre um ponto pelo Swagger como administrador e confirme que `ativo` é `true`. |
+| Consulta de situação mostra `SEM_DADOS_ATUALIZADOS` | Registre uma leitura válida e recente pelo endpoint de leituras, usando o perfil administrador. |
+| JWT deixa de funcionar | Faça login novamente, especialmente após reiniciar o Java com uma nova chave temporária. |
+| `main_api.dart` não encontrado | Confira se a execução integrada está em `lib/api/bin/main_api.dart` na versão local do Mobile. |
+| Erro de importação no Dart | Execute `dart pub get` na raiz do projeto Mobile e confira os caminhos da pasta `lib/api/`. |
+| Porta Java diferente de 8080 | Ajuste a configuração `baseUrl` no Mobile para a porta utilizada pelo Spring Boot. |
+
+## 14. Vídeo demonstrativo e protótipo
+
+**Vídeo de Java Advanced:** https://youtu.be/2SlwoG4p7Oc
+
+O vídeo apresenta a proposta Binova, a estrutura da API Java Spring Boot, as principais funcionalidades no Swagger e o fluxo de integração com o Mobile em Dart Console. Os passos das seções 8 e 13 permitem reproduzir a demonstração localmente.
+
+**Protótipo visual do Mobile:** https://www.figma.com/design/qxJAkVzKzr1JdKEHtsQDuU
+
+O Figma apresenta a proposta de interface para celular, incluindo início, pontos de coleta, detalhes, registro de ocorrências e acompanhamento pelo cidadão. A comunicação HTTP descrita neste README é executada pelo **Dart Console integrado**, e não pelo protótipo visual.
+
